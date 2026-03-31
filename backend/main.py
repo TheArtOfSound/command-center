@@ -18,6 +18,7 @@ import anthropic
 import httpx
 
 from database import init_db, seed_data, get_db, query, execute, uid, now
+from emails import start_email_system, send_email, preview_email, EMAIL_TYPES
 
 # ── AUTH ───────────────────────────────────────────────────────
 ENV_PATH = Path.home() / "qira" / "command_center" / ".env"
@@ -97,6 +98,7 @@ COMMUNICATION STYLE:
 async def startup():
     init_db()
     seed_data()
+    start_email_system()
 
 
 # ── HEALTH ─────────────────────────────────────────────────────
@@ -642,6 +644,40 @@ async def import_sweep(data: dict):
         )
         imported += 1
     return {"imported": imported}
+
+
+# ── EMAIL AUTOMATION ───────────────────────────────────────────
+@app.get("/api/emails/types")
+async def list_email_types():
+    return {k: v["schedule"] for k, v in EMAIL_TYPES.items()}
+
+
+@app.post("/api/emails/send/{email_type}")
+async def trigger_email(email_type: str, context: dict = {}):
+    success = send_email(email_type, context if context else None)
+    return {"sent": success, "type": email_type}
+
+
+@app.post("/api/emails/preview/{email_type}")
+async def preview_email_endpoint(email_type: str, context: dict = {}):
+    try:
+        content = preview_email(email_type, context if context else None)
+        return {"subject": content["subject"], "body": content["body"]}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.post("/api/emails/breakthrough")
+async def breakthrough(data: dict):
+    success = send_email("breakthrough_celebration", data)
+    return {"sent": success}
+
+
+@app.get("/api/emails/history")
+async def email_history():
+    return query(
+        "SELECT * FROM machine_events WHERE event_type = 'email_sent' ORDER BY timestamp DESC LIMIT 30"
+    )
 
 
 # ── MACHINE / WATCHER ─────────────────────────────────────────
