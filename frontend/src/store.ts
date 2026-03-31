@@ -5,12 +5,24 @@ import axios, { type AxiosInstance } from 'axios'
 // API key is loaded from localStorage or prompted
 let apiKey = localStorage.getItem('qira_api_key') || ''
 
-// Detect if we're on GitHub Pages or localhost
+// Smart API routing: localhost when home, Render when away
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-const API_BASE = isLocal ? '/api' : (import.meta.env.VITE_API_URL || 'https://qira-cc.onrender.com/api')
+let API_BASE = isLocal ? '/api' : 'https://qira-cc.onrender.com/api'
+
+// When on GitHub Pages, try local backend first (faster, full data)
+if (!isLocal) {
+  const savedBackend = localStorage.getItem('qira_backend')
+  if (savedBackend) API_BASE = savedBackend + '/api'
+  // Auto-detect local backend on page load
+  fetch('http://localhost:7777/health', { signal: AbortSignal.timeout(2000) })
+    .then(r => { if (r.ok) { API_BASE = 'http://localhost:7777/api'; localStorage.setItem('qira_backend', 'http://localhost:7777') } })
+    .catch(() => { API_BASE = 'https://qira-cc.onrender.com/api'; localStorage.setItem('qira_backend', 'https://qira-cc.onrender.com') })
+}
 
 const api: AxiosInstance = axios.create({ baseURL: API_BASE })
 api.interceptors.request.use(config => {
+  // Always use current API_BASE (may have been updated by auto-detect)
+  config.baseURL = API_BASE
   config.headers['X-API-Key'] = apiKey
   return config
 })
