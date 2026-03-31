@@ -4,3 +4,5 @@ logs/
 __pycache__/
 node_modules/
 frontend/dist/
+data/gmail_credentials.json
+data/gmail_token.json
