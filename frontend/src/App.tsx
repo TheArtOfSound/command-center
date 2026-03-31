@@ -124,6 +124,172 @@ function AuthScreen() {
 }
 
 // ── NUCLEUS VIEW ─────────────────────────────────────────────
+// ── IMMERSIVE NUCLEUS HELPERS ───────────────────────────────
+
+function ParticleBackground() {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let animId: number
+    let particles: { x: number; y: number; vx: number; vy: number; r: number }[] = []
+
+    const resize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
+    // Init particles
+    for (let i = 0; i < 300; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        r: Math.random() * 1.5 + 0.5,
+      })
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      // Draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x
+          const dy = particles[i].y - particles[j].y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist < 120) {
+            ctx.beginPath()
+            ctx.moveTo(particles[i].x, particles[i].y)
+            ctx.lineTo(particles[j].x, particles[j].y)
+            ctx.strokeStyle = `rgba(37,99,235,${0.08 * (1 - dist / 120)})`
+            ctx.lineWidth = 0.5
+            ctx.stroke()
+          }
+        }
+      }
+      // Draw particles
+      for (const p of particles) {
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(37,99,235,0.2)'
+        ctx.fill()
+        // Move
+        p.x += p.vx
+        p.y += p.vy
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1
+      }
+      animId = requestAnimationFrame(draw)
+    }
+    draw()
+
+    return () => {
+      cancelAnimationFrame(animId)
+      window.removeEventListener('resize', resize)
+    }
+  }, [])
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 0, pointerEvents: 'none' }}
+    />
+  )
+}
+
+function AnimatedNumber({ value, decimals = 0, duration = 800 }: { value: number; decimals?: number; duration?: number }) {
+  const [display, setDisplay] = useState(0)
+  const ref = useRef<number>(0)
+  const startTime = useRef<number>(0)
+
+  useEffect(() => {
+    const target = typeof value === 'number' ? value : parseFloat(String(value)) || 0
+    const start = ref.current
+    startTime.current = performance.now()
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime.current
+      const progress = Math.min(elapsed / duration, 1)
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      const current = start + (target - start) * eased
+      ref.current = current
+      setDisplay(current)
+      if (progress < 1) requestAnimationFrame(animate)
+    }
+    requestAnimationFrame(animate)
+  }, [value, duration])
+
+  return <>{decimals > 0 ? display.toFixed(decimals) : Math.round(display)}</>
+}
+
+function FadeInSection({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect() } },
+      { threshold: 0.1 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(20px)',
+        transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+
+
+const PROJECT_GLOW: Record<string, string> = {
+  egc: '0 0 20px rgba(37,99,235,0.4), 0 0 40px rgba(37,99,235,0.15)',
+  codey: '0 0 20px rgba(16,185,129,0.4), 0 0 40px rgba(16,185,129,0.15)',
+  lolm: '0 0 20px rgba(245,158,11,0.4), 0 0 40px rgba(245,158,11,0.15)',
+  nfet: '0 0 20px rgba(6,182,212,0.4), 0 0 40px rgba(6,182,212,0.15)',
+  qira: '0 0 20px rgba(139,92,246,0.4), 0 0 40px rgba(139,92,246,0.15)',
+}
+
+function getProjectGlow(name: string): string {
+  const lower = name.toLowerCase()
+  for (const [key, val] of Object.entries(PROJECT_GLOW)) {
+    if (lower.includes(key)) return val
+  }
+  return PROJECT_GLOW.egc
+}
+
+const pulseGreenDot = (
+  <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981, 0 0 12px rgba(16,185,129,0.4)', animation: 'pulse-live 2s ease-in-out infinite' }} />
+)
+
+const statusDot = (alive: boolean) => (
+  <span style={{
+    display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
+    background: alive ? '#10b981' : '#ef4444',
+    boxShadow: alive ? '0 0 6px #10b981, 0 0 12px rgba(16,185,129,0.3)' : '0 0 6px #ef4444, 0 0 12px rgba(239,68,68,0.3)',
+  }} />
+)
+
 function NucleusView() {
   const { nucleus, fetchNucleus, egc, fetchEGC, projects, fetchProjects, tasks, fetchTasks,
           links, fetchLinks, linkChecks, fetchLinkChecks, githubRepos, fetchGithubRepos,
@@ -144,231 +310,299 @@ function NucleusView() {
     linksByProject[l.project].push(l)
   })
 
+  const activeProjects = projects.filter((p: any) => p.status === 'active').length
+  const openTasks = nucleus?.active_tasks ?? pendingTasks.length
+  const doneToday = nucleus?.completed_today ?? 0
+  const egcN = liveData?.egc_n ?? egc?.n ?? 40
+  const pearsonR = egc?.pearson_r ?? 0.311
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-xs text-[#64748b] uppercase tracking-[0.3em]">QIRA COMMAND CENTER</div>
-          <h1 className="text-3xl font-bold text-[#e2e8f0] mt-1">
-            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, Bryan
-          </h1>
-        </div>
-        <div className="text-right text-xs text-[#64748b]">
-          <div>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
-          <div className="text-[#10b981] mt-1">Systems operational</div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <Card><Stat label="Active Projects" value={projects.filter((p: any) => p.status === 'active').length} /></Card>
-        <Card><Stat label="Open Tasks" value={nucleus?.active_tasks ?? pendingTasks.length} /></Card>
-        <Card><Stat label="Done Today" value={nucleus?.completed_today ?? 0} color="text-[#10b981]" /></Card>
-        <Card><Stat label="EGC N" value={liveData?.egc_n ?? egc?.n ?? 40} color="text-[#f59e0b]" /></Card>
-        <Card><Stat label="Pearson r" value={egc?.pearson_r?.toFixed(3) ?? '0.311'} /></Card>
-        <Card><Stat label="Aronson" value="PENDING" color="text-[#ef4444]" /></Card>
-      </div>
-
-      {/* Live Site Status */}
-      <SectionTitle>Live Sites & Services</SectionTitle>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        {liveData && <>
-          <a href="https://theartofsound.github.io/egcstudy/" target="_blank" rel="noopener noreferrer">
-            <Card className="!p-3 hover:border-[#2563eb] cursor-pointer">
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${liveData.egc_study_status === 200 ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
-                <span className="text-xs">EGC Study</span>
-                <span className="text-[10px] text-[#10b981] ml-auto">N={liveData.egc_n}</span>
-              </div>
-            </Card>
-          </a>
-          <a href="https://theartofsound.github.io/thegate/" target="_blank" rel="noopener noreferrer">
-            <Card className="!p-3 hover:border-[#2563eb] cursor-pointer">
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${liveData.thegate_status === 200 ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
-                <span className="text-xs">The Gate</span>
-              </div>
-            </Card>
-          </a>
-          <a href="https://theartofsound.github.io/egcrate/" target="_blank" rel="noopener noreferrer">
-            <Card className="!p-3 hover:border-[#2563eb] cursor-pointer">
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${liveData.egcrate_status === 200 ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
-                <span className="text-xs">EGC Rater</span>
-              </div>
-            </Card>
-          </a>
-          <a href="https://theartofsound.github.io/portfolio/" target="_blank" rel="noopener noreferrer">
-            <Card className="!p-3 hover:border-[#2563eb] cursor-pointer">
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${liveData.portfolio_status === 200 ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
-                <span className="text-xs">Portfolio</span>
-              </div>
-            </Card>
-          </a>
-          <a href="https://theartofsound.github.io/codey/" target="_blank" rel="noopener noreferrer">
-            <Card className="!p-3 hover:border-[#2563eb] cursor-pointer">
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${liveData.codey_landing_status === 200 ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
-                <span className="text-xs">Codey Landing</span>
-              </div>
-            </Card>
-          </a>
-          <a href="https://zenodo.org/records/19242315" target="_blank" rel="noopener noreferrer">
-            <Card className="!p-3 hover:border-[#2563eb] cursor-pointer">
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${liveData.preprint_status === 200 ? 'bg-[#10b981]' : liveData.preprint_status > 0 ? 'bg-[#f59e0b]' : 'bg-[#ef4444]'}`} />
-                <span className="text-xs">Preprint (Zenodo)</span>
-              </div>
-            </Card>
-          </a>
-          <Card className="!p-3">
-            <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${liveData.nfet_alive ? 'bg-[#10b981]' : 'bg-[#64748b]'}`} />
-              <span className="text-xs">NFET Local</span>
-              <span className="text-[10px] text-[#64748b] ml-auto">{liveData.nfet_alive ? 'RUNNING' : 'offline'}</span>
+    <>
+      <ParticleBackground />
+      <style>{`
+        @keyframes pulse-live { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.85); } }
+        @keyframes glow-pulse { 0%,100% { box-shadow: var(--glow-base); } 50% { box-shadow: var(--glow-bright); } }
+        @keyframes greeting-glow { 0%,100% { text-shadow: 0 0 20px rgba(37,99,235,0.3), 0 0 40px rgba(37,99,235,0.1); } 50% { text-shadow: 0 0 30px rgba(37,99,235,0.5), 0 0 60px rgba(37,99,235,0.2); } }
+        .glass-card { background: rgba(11,18,32,0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(37,99,235,0.15); border-radius: 0.5rem; padding: 1.25rem; transition: box-shadow 0.3s ease, border-color 0.3s ease; }
+        .glass-card-sm { background: rgba(11,18,32,0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(37,99,235,0.15); border-radius: 0.5rem; padding: 0.75rem; transition: box-shadow 0.3s ease, border-color 0.3s ease; }
+      `}</style>
+      <div className="space-y-6" style={{ position: 'relative', zIndex: 1 }}>
+        {/* Greeting */}
+        <FadeInSection delay={0}>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs text-[#64748b] uppercase tracking-[0.3em]">QIRA COMMAND CENTER</div>
+              <h1
+                className="text-3xl font-bold text-[#e2e8f0] mt-1"
+                style={{ animation: 'greeting-glow 4s ease-in-out infinite', textShadow: '0 0 20px rgba(37,99,235,0.3), 0 0 40px rgba(37,99,235,0.1)' }}
+              >
+                Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, Bryan
+              </h1>
             </div>
-          </Card>
-        </>}
-        {linkChecks.map((c: any) => (
-          <Card key={c.id} className="!p-3">
-            <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${c.alive ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
-              <span className="text-xs">{c.name}</span>
-              <span className="text-[10px] text-[#64748b] ml-auto">:{c.check_port}</span>
+            <div className="text-right text-xs text-[#64748b]">
+              <div>{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+              <div className="text-[#10b981] mt-1 flex items-center justify-end gap-2">{pulseGreenDot} Systems operational</div>
             </div>
-          </Card>
-        ))}
-      </div>
+          </div>
+        </FadeInSection>
 
-      {/* GitHub Recent Activity */}
-      {liveData?.github_recent?.length > 0 && (
-        <>
-          <SectionTitle>GitHub Activity</SectionTitle>
-          <Card className="!p-4">
-            <div className="space-y-2">
-              {liveData.github_recent.map((e: any, i: number) => (
-                <div key={i} className="flex items-center gap-3 text-xs">
-                  <span className={`w-1.5 h-1.5 rounded-full ${e.type === 'PushEvent' ? 'bg-[#10b981]' : 'bg-[#60a5fa]'}`} />
-                  <span className="text-[#64748b]">{e.type.replace('Event', '')}</span>
-                  <span className="text-[#e2e8f0]">{e.repo.replace('TheArtOfSound/', '')}</span>
-                  <span className="text-[#64748b] ml-auto">{new Date(e.created_at).toLocaleTimeString()}</span>
+        {/* Stats Row */}
+        <FadeInSection delay={100}>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="glass-card">
+              <div className="text-[10px] text-muted uppercase tracking-widest mb-1">Active Projects</div>
+              <div className="text-2xl font-bold text-accent-bright"><AnimatedNumber value={activeProjects} /></div>
+            </div>
+            <div className="glass-card">
+              <div className="text-[10px] text-muted uppercase tracking-widest mb-1">Open Tasks</div>
+              <div className="text-2xl font-bold text-accent-bright"><AnimatedNumber value={openTasks} /></div>
+            </div>
+            <div className="glass-card">
+              <div className="text-[10px] text-muted uppercase tracking-widest mb-1">Done Today</div>
+              <div className="text-2xl font-bold text-[#10b981]"><AnimatedNumber value={doneToday} /></div>
+            </div>
+            <div className="glass-card">
+              <div className="text-[10px] text-muted uppercase tracking-widest mb-1">EGC N</div>
+              <div className="text-2xl font-bold text-[#f59e0b] flex items-center gap-2"><AnimatedNumber value={egcN} /> {pulseGreenDot}</div>
+            </div>
+            <div className="glass-card">
+              <div className="text-[10px] text-muted uppercase tracking-widest mb-1">Pearson r</div>
+              <div className="text-2xl font-bold text-accent-bright flex items-center gap-2"><AnimatedNumber value={pearsonR} decimals={3} /> {pulseGreenDot}</div>
+            </div>
+            <div className="glass-card">
+              <div className="text-[10px] text-muted uppercase tracking-widest mb-1">Aronson</div>
+              <div className="text-2xl font-bold text-[#ef4444]">PENDING</div>
+            </div>
+          </div>
+        </FadeInSection>
+
+        {/* Live Site Status */}
+        <FadeInSection delay={200}>
+          <SectionTitle>Live Sites & Services</SectionTitle>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {liveData && <>
+              <a href="https://theartofsound.github.io/egcstudy/" target="_blank" rel="noopener noreferrer">
+                <div className="glass-card-sm hover:border-[rgba(37,99,235,0.4)] cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    {statusDot(liveData.egc_study_status === 200)}
+                    <span className="text-xs">EGC Study</span>
+                    <span className="text-[10px] text-[#10b981] ml-auto flex items-center gap-1">{pulseGreenDot} N={liveData.egc_n}</span>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </Card>
-        </>
-      )}
-
-      {/* Project Health with Links */}
-      <SectionTitle>Project Health</SectionTitle>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {projects.map((p: any) => {
-          const pLinks = linksByProject[p.name] || linksByProject[p.id?.toUpperCase()] || []
-          return (
-            <Card key={p.id} className="hover:border-[#2563eb] transition-colors">
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-sm">{p.name}</span>
-                <Badge text={p.status} color={p.status === 'active' ? 'bg-[#10b981]/20 text-[#10b981]' : 'bg-[#64748b]/20 text-[#64748b]'} />
+              </a>
+              <a href="https://theartofsound.github.io/thegate/" target="_blank" rel="noopener noreferrer">
+                <div className="glass-card-sm hover:border-[rgba(37,99,235,0.4)] cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    {statusDot(liveData.thegate_status === 200)}
+                    <span className="text-xs">The Gate</span>
+                  </div>
+                </div>
+              </a>
+              <a href="https://theartofsound.github.io/egcrate/" target="_blank" rel="noopener noreferrer">
+                <div className="glass-card-sm hover:border-[rgba(37,99,235,0.4)] cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    {statusDot(liveData.egcrate_status === 200)}
+                    <span className="text-xs">EGC Rater</span>
+                  </div>
+                </div>
+              </a>
+              <a href="https://theartofsound.github.io/portfolio/" target="_blank" rel="noopener noreferrer">
+                <div className="glass-card-sm hover:border-[rgba(37,99,235,0.4)] cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    {statusDot(liveData.portfolio_status === 200)}
+                    <span className="text-xs">Portfolio</span>
+                  </div>
+                </div>
+              </a>
+              <a href="https://theartofsound.github.io/codey/" target="_blank" rel="noopener noreferrer">
+                <div className="glass-card-sm hover:border-[rgba(37,99,235,0.4)] cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    {statusDot(liveData.codey_landing_status === 200)}
+                    <span className="text-xs">Codey Landing</span>
+                  </div>
+                </div>
+              </a>
+              <a href="https://zenodo.org/records/19242315" target="_blank" rel="noopener noreferrer">
+                <div className="glass-card-sm hover:border-[rgba(37,99,235,0.4)] cursor-pointer">
+                  <div className="flex items-center gap-2">
+                    {statusDot(liveData.preprint_status === 200)}
+                    <span className="text-xs">Preprint (Zenodo)</span>
+                  </div>
+                </div>
+              </a>
+              <div className="glass-card-sm">
+                <div className="flex items-center gap-2">
+                  {statusDot(liveData.nfet_alive)}
+                  <span className="text-xs">NFET Local</span>
+                  <span className="text-[10px] text-[#64748b] ml-auto">{liveData.nfet_alive ? 'RUNNING' : 'offline'}</span>
+                </div>
               </div>
-              <div className="text-xs text-[#64748b] mb-2 line-clamp-2">{p.description}</div>
-              <HealthBar value={p.health} />
-              <div className="text-[10px] text-[#64748b] mt-1 mb-2">Health: {p.health}/10</div>
-              {pLinks.length > 0 && (
-                <div className="border-t border-[#1e2d40] pt-2 mt-2 space-y-1">
-                  {pLinks.slice(0, 4).map((l: any) => (
+            </>}
+            {linkChecks.map((c: any) => (
+              <div key={c.id} className="glass-card-sm">
+                <div className="flex items-center gap-2">
+                  {statusDot(c.alive)}
+                  <span className="text-xs">{c.name}</span>
+                  <span className="text-[10px] text-[#64748b] ml-auto">:{c.check_port}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </FadeInSection>
+
+        {/* GitHub Recent Activity */}
+        {liveData?.github_recent?.length > 0 && (
+          <FadeInSection delay={300}>
+            <SectionTitle>GitHub Activity</SectionTitle>
+            <div className="glass-card" style={{ padding: '1rem' }}>
+              <div className="space-y-2">
+                {liveData.github_recent.map((e: any, i: number) => (
+                  <div key={i} className="flex items-center gap-3 text-xs">
+                    <span className={`w-1.5 h-1.5 rounded-full ${e.type === 'PushEvent' ? 'bg-[#10b981]' : 'bg-[#60a5fa]'}`} />
+                    <span className="text-[#64748b]">{e.type.replace('Event', '')}</span>
+                    <span className="text-[#e2e8f0]">{e.repo.replace('TheArtOfSound/', '')}</span>
+                    <span className="text-[#64748b] ml-auto">{new Date(e.created_at).toLocaleTimeString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </FadeInSection>
+        )}
+
+        {/* Project Health with Links */}
+        <FadeInSection delay={400}>
+          <SectionTitle>Project Health</SectionTitle>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {projects.map((p: any) => {
+              const pLinks = linksByProject[p.name] || linksByProject[p.id?.toUpperCase()] || []
+              const glow = getProjectGlow(p.name || p.id || '')
+              return (
+                <div
+                  key={p.id}
+                  className="glass-card cursor-default"
+                  style={{ ['--glow-base' as any]: glow.replace('0.4', '0.2').replace('0.15', '0.05'), ['--glow-bright' as any]: glow } as React.CSSProperties}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = glow; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(37,99,235,0.3)' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'none'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(37,99,235,0.15)' }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-sm">{p.name}</span>
+                    <Badge text={p.status} color={p.status === 'active' ? 'bg-[#10b981]/20 text-[#10b981]' : 'bg-[#64748b]/20 text-[#64748b]'} />
+                  </div>
+                  <div className="text-xs text-[#64748b] mb-2 line-clamp-2">{p.description}</div>
+                  <HealthBar value={p.health} />
+                  <div className="text-[10px] text-[#64748b] mt-1 mb-2">Health: {p.health}/10</div>
+                  {pLinks.length > 0 && (
+                    <div className="border-t border-[rgba(37,99,235,0.1)] pt-2 mt-2 space-y-1">
+                      {pLinks.slice(0, 4).map((l: any) => (
+                        <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-[10px] text-[#60a5fa] hover:text-[#2563eb] transition-colors">
+                          <span className="text-[#64748b]">&rarr;</span> {l.name}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </FadeInSection>
+
+        {/* EGC Live */}
+        {egc && (
+          <FadeInSection delay={500}>
+            <SectionTitle>EGC Research — Live</SectionTitle>
+            <div className="glass-card">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                <div>
+                  <div className="text-[10px] text-muted uppercase tracking-widest mb-1">Subjects</div>
+                  <div className="text-2xl font-bold text-accent-bright flex items-center gap-2">N=<AnimatedNumber value={egc.n} /> {pulseGreenDot}</div>
+                </div>
+                <Stat label="Compressors" value={`${egc.compressors}%`} color="text-[#10b981]" />
+                <Stat label="Expanders" value={`${egc.expanders}%`} color="text-[#60a5fa]" />
+                <Stat label="Suppressors" value={`${egc.suppressors}%`} color="text-[#f59e0b]" />
+                <Stat label="Pearson r" value={egc.pearson_r?.toFixed(3)} />
+                <Stat label="Comfort Gap" value={`${egc.comfort_gap}pts`} />
+                <Stat label="Zero-r Supp." value={egc.zero_r_suppressors ?? 6} color="text-[#ef4444]" />
+              </div>
+            </div>
+          </FadeInSection>
+        )}
+
+        {/* GitHub Repos */}
+        {githubRepos.length > 0 && (
+          <FadeInSection delay={600}>
+            <SectionTitle>GitHub Repositories ({githubRepos.length})</SectionTitle>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {githubRepos.map((r: any) => {
+                const glow = getProjectGlow(r.project || r.name || '')
+                return (
+                  <a key={r.id} href={`https://github.com/${r.full_name}`} target="_blank" rel="noopener noreferrer">
+                    <div
+                      className="glass-card-sm cursor-pointer"
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = glow; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(37,99,235,0.3)' }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'none'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(37,99,235,0.15)' }}
+                    >
+                      <div className="text-xs font-semibold">{r.name}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge text={r.project || 'Unknown'} />
+                        {r.language && <span className="text-[10px] text-[#64748b]">{r.language}</span>}
+                      </div>
+                    </div>
+                  </a>
+                )
+              })}
+            </div>
+          </FadeInSection>
+        )}
+
+        {/* Quick Links */}
+        <FadeInSection delay={700}>
+          <SectionTitle>Quick Links</SectionTitle>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {Object.entries(linksByProject).map(([project, pLinks]) => (
+              <div key={project} className="glass-card" style={{ padding: '1rem' }}>
+                <div className="text-xs text-[#60a5fa] uppercase tracking-wider mb-2">{project}</div>
+                <div className="space-y-1">
+                  {(pLinks as any[]).map((l: any) => (
                     <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-[10px] text-[#60a5fa] hover:text-[#2563eb] transition-colors">
-                      <span className="text-[#64748b]">&rarr;</span> {l.name}
+                      className="flex items-center justify-between text-xs hover:text-[#60a5fa] transition-colors group">
+                      <span>{l.name}</span>
+                      <span className="text-[10px] text-[#64748b] group-hover:text-[#60a5fa] truncate max-w-[200px]">{l.url.replace('https://', '').replace('http://', '')}</span>
                     </a>
                   ))}
                 </div>
-              )}
-            </Card>
-          )
-        })}
-      </div>
+              </div>
+            ))}
+          </div>
+        </FadeInSection>
 
-      {/* EGC Live */}
-      {egc && (
-        <>
-          <SectionTitle>EGC Research — Live</SectionTitle>
-          <Card>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-              <Stat label="Subjects" value={`N=${egc.n}`} />
-              <Stat label="Compressors" value={`${egc.compressors}%`} color="text-[#10b981]" />
-              <Stat label="Expanders" value={`${egc.expanders}%`} color="text-[#60a5fa]" />
-              <Stat label="Suppressors" value={`${egc.suppressors}%`} color="text-[#f59e0b]" />
-              <Stat label="Pearson r" value={egc.pearson_r?.toFixed(3)} />
-              <Stat label="Comfort Gap" value={`${egc.comfort_gap}pts`} />
-              <Stat label="Zero-r Supp." value={egc.zero_r_suppressors ?? 6} color="text-[#ef4444]" />
-            </div>
-          </Card>
-        </>
-      )}
-
-      {/* GitHub Repos */}
-      {githubRepos.length > 0 && (
-        <>
-          <SectionTitle>GitHub Repositories ({githubRepos.length})</SectionTitle>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {githubRepos.map((r: any) => (
-              <a key={r.id} href={`https://github.com/${r.full_name}`} target="_blank" rel="noopener noreferrer">
-                <Card className="!p-3 hover:border-[#2563eb] transition-colors cursor-pointer">
-                  <div className="text-xs font-semibold">{r.name}</div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge text={r.project || 'Unknown'} />
-                    {r.language && <span className="text-[10px] text-[#64748b]">{r.language}</span>}
+        {/* Active Work */}
+        <FadeInSection delay={800}>
+          <SectionTitle>Active Work</SectionTitle>
+          <div className="glass-card">
+            {inProgress.length === 0 && pendingTasks.length === 0 ? (
+              <div className="text-[#64748b] text-sm">No tasks yet. Add tasks from the Projects view.</div>
+            ) : (
+              <div className="space-y-2">
+                {inProgress.map((t: any) => (
+                  <div key={t.id} className="flex items-center gap-3 text-sm">
+                    <Icon d={icons.activity} className="text-[#60a5fa]" />
+                    <span className="text-[#60a5fa]">{t.title}</span>
+                    <Badge text="in progress" />
                   </div>
-                </Card>
-              </a>
-            ))}
+                ))}
+                {pendingTasks.slice(0, 8).map((t: any) => (
+                  <div key={t.id} className="flex items-center gap-3 text-sm text-[#64748b]">
+                    <Icon d={icons.clock} />
+                    <span>{t.title}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </>
-      )}
-
-      {/* Quick Links */}
-      <SectionTitle>Quick Links</SectionTitle>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {Object.entries(linksByProject).map(([project, pLinks]) => (
-          <Card key={project} className="!p-4">
-            <div className="text-xs text-[#60a5fa] uppercase tracking-wider mb-2">{project}</div>
-            <div className="space-y-1">
-              {(pLinks as any[]).map((l: any) => (
-                <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-between text-xs hover:text-[#60a5fa] transition-colors group">
-                  <span>{l.name}</span>
-                  <span className="text-[10px] text-[#64748b] group-hover:text-[#60a5fa] truncate max-w-[200px]">{l.url.replace('https://', '').replace('http://', '')}</span>
-                </a>
-              ))}
-            </div>
-          </Card>
-        ))}
+        </FadeInSection>
       </div>
-
-      {/* Active Work */}
-      <SectionTitle>Active Work</SectionTitle>
-      <Card>
-        {inProgress.length === 0 && pendingTasks.length === 0 ? (
-          <div className="text-[#64748b] text-sm">No tasks yet. Add tasks from the Projects view.</div>
-        ) : (
-          <div className="space-y-2">
-            {inProgress.map((t: any) => (
-              <div key={t.id} className="flex items-center gap-3 text-sm">
-                <Icon d={icons.activity} className="text-[#60a5fa]" />
-                <span className="text-[#60a5fa]">{t.title}</span>
-                <Badge text="in progress" />
-              </div>
-            ))}
-            {pendingTasks.slice(0, 8).map((t: any) => (
-              <div key={t.id} className="flex items-center gap-3 text-sm text-[#64748b]">
-                <Icon d={icons.clock} />
-                <span>{t.title}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-    </div>
+    </>
   )
 }
 

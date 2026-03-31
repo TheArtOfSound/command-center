@@ -304,9 +304,19 @@ export const useStore = create<Store>()(
       githubRepos: [],
       fetchGithubRepos: async () => {
         try {
-          const { data } = await api.get('/github/repos')
-          set({ githubRepos: data })
-        } catch {}
+          const { data } = await api.get('/github/deep/repos')
+          if (data && data.length > 0) {
+            set({ githubRepos: data })
+          } else {
+            const { data: fallback } = await api.get('/github/repos')
+            set({ githubRepos: fallback })
+          }
+        } catch {
+          try {
+            const { data } = await api.get('/github/repos')
+            set({ githubRepos: data })
+          } catch {}
+        }
       },
 
       emailTypes: {},

@@ -95,7 +95,7 @@ def _ollama_chat(system: str, message: str) -> str:
             ],
             "stream": False,
         },
-        timeout=60.0,
+        timeout=120.0,
     )
     return resp.json()["message"]["content"]
 

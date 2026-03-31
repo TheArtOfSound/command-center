@@ -341,14 +341,14 @@ def analyze_repo(repo_full_name: str) -> dict:
     # Build manifest
     manifest = "\n".join([f"  {f['file_path']} ({f['size']}B)" for f in files])
 
-    # Build key file contents (cap at ~12000 chars to fit in context)
+    # Build key file contents (cap at ~3000 chars for fast local inference)
     key_contents = []
     chars = 0
     for f in files:
         content = f.get("content", "") or ""
-        if chars + len(content) > 12000:
+        if chars + len(content) > 3000:
             # Truncate large files
-            remaining = 12000 - chars
+            remaining = 3000 - chars
             if remaining > 200:
                 key_contents.append(f"=== {f['file_path']} ===\n{content[:remaining]}\n[TRUNCATED]")
             break
