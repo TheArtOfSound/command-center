@@ -20,6 +20,7 @@ import httpx
 
 from database import init_db, seed_data, get_db, query, execute, uid, now
 from ai_client import chat as ai_chat
+from council import council as agent_council
 from emails import start_email_system, send_email, preview_email, EMAIL_TYPES
 from github_intel import scan_all_repos, get_all_repos, get_recent_commits, get_repo
 from github_deep import (full_scan as deep_full_scan, get_deep_repos, get_deep_repo,
@@ -1273,6 +1274,59 @@ async def internal_broadcast(data: dict):
         except:
             pass
     return {"ok": True}
+
+
+# ── COUNCIL / MULTI-AGENT ─────────────────────────────────────
+
+class CouncilConvene(BaseModel):
+    topic: str
+
+class BusPublish(BaseModel):
+    content: str
+    to: str = "ALL"
+
+
+@app.post("/api/council/convene")
+async def council_convene(req: CouncilConvene):
+    result = await agent_council.convene(req.topic)
+    return result
+
+
+@app.post("/api/council/close")
+async def council_close():
+    result = await agent_council.close_session()
+    return result
+
+
+@app.post("/api/bus/publish")
+async def bus_publish(req: BusPublish):
+    messages = await agent_council.handle_message(req.content, req.to)
+    return {"messages": messages}
+
+
+@app.get("/api/bus/history")
+async def bus_history():
+    return {"messages": agent_council.bus.get_history(limit=50)}
+
+
+@app.get("/api/bus/session/{session_id}")
+async def bus_session(session_id: str):
+    return {"messages": agent_council.bus.get_session_messages(session_id)}
+
+
+@app.get("/api/agents/status")
+async def agents_status():
+    return {
+        "agents": agent_council.agent_statuses(),
+        "active_session": agent_council.active_session,
+        "router": agent_council.router_stats(),
+    }
+
+
+@app.post("/api/agents/{name}/trigger")
+async def trigger_agent(name: str, data: dict = {}):
+    result = await agent_council.trigger_agent(name, data.get("content", ""))
+    return result
 
 
 # ── WEBSOCKET ──────────────────────────────────────────────────
