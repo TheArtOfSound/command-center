@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import asyncio
 import secrets
+from collections import Counter, defaultdict
 from datetime import datetime, date
 from pathlib import Path
 from typing import Optional
@@ -20,6 +22,7 @@ from database import init_db, seed_data, get_db, query, execute, uid, now
 from ai_client import chat as ai_chat
 from emails import start_email_system, send_email, preview_email, EMAIL_TYPES
 from github_intel import scan_all_repos, get_all_repos, get_recent_commits, get_repo
+from health_grid import check_all as health_check_all
 
 # ── AUTH ───────────────────────────────────────────────────────
 ENV_PATH = Path.home() / "qira" / "command_center" / ".env"
@@ -384,6 +387,218 @@ async def aronson_prep():
     }
 
 
+# ── EGC LIVE DASHBOARD ────────────────────────────────────────
+@app.get("/api/egc/dashboard")
+async def egc_dashboard():
+    """Comprehensive EGC dashboard: subjects, stats, distributions, timeline."""
+    supabase_url = "https://wgzopjrdnyazvhpklzhw.supabase.co"
+    supabase_key = (
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+        "eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnem9wanJkbnlhenZocGtsemh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTc4NzcsImV4cCI6MjA4OTk3Mzg3N30."
+        "8dx5xWljLDZa5PMvE0Ps5q4ZEyuZgx_5FHVnD0WfBjs"
+    )
+    headers = {"apikey": supabase_key, "Authorization": f"Bearer {supabase_key}"}
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as http:
+            resp = await http.get(
+                f"{supabase_url}/rest/v1/egc_responses?select=*&is_excluded=eq.false&order=created_at.asc",
+                headers=headers,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+        if not isinstance(data, list) or len(data) == 0:
+            raise ValueError(f"No data returned: {data}")
+
+        # ── Build subject list with classifications ──
+        subjects = []
+        t_drops = []
+        comfort_pres = []
+        comfort_posts = []
+        zero_r_suppressors = []
+        extreme_suppressor = None
+
+        for row in data:
+            td = row.get("t_drop")
+            if td is None:
+                continue
+            td = float(td)
+            pid = row.get("participant_id", row.get("id", ""))
+            cpre = row.get("comfort_pre")
+            cpost = row.get("comfort_post")
+            created = row.get("created_at", "")
+
+            # Classify type
+            if abs(td) <= 0.02:
+                stype = "Compressor"
+            elif td < -0.02:
+                stype = "Expander"
+            else:
+                stype = "Suppressor"
+
+            is_zero_r = abs(td) < 0.001
+
+            subject = {
+                "participant_id": pid,
+                "t_drop": round(td, 4),
+                "type": stype,
+                "comfort_pre": float(cpre) if cpre is not None else None,
+                "comfort_post": float(cpost) if cpost is not None else None,
+                "created_at": created,
+                "is_zero_r": is_zero_r,
+            }
+            subjects.append(subject)
+            t_drops.append(td)
+
+            if cpre is not None:
+                comfort_pres.append(float(cpre))
+            if cpost is not None:
+                comfort_posts.append(float(cpost))
+
+            if is_zero_r:
+                zero_r_suppressors.append(subject)
+
+            if stype == "Suppressor":
+                if extreme_suppressor is None or td > extreme_suppressor["t_drop"]:
+                    extreme_suppressor = subject
+
+        n = len(subjects)
+
+        # ── Type counts ──
+        type_counts = Counter(s["type"] for s in subjects)
+        n_compressors = type_counts.get("Compressor", 0)
+        n_expanders = type_counts.get("Expander", 0)
+        n_suppressors = type_counts.get("Suppressor", 0)
+
+        # ── Pearson r (comfort_pre vs t_drop for subjects that have both) ──
+        paired = [(s["comfort_pre"], s["t_drop"]) for s in subjects if s["comfort_pre"] is not None]
+        pearson_r = 0.0
+        if len(paired) >= 3:
+            xs = [p[0] for p in paired]
+            ys = [p[1] for p in paired]
+            mx = sum(xs) / len(xs)
+            my = sum(ys) / len(ys)
+            num = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+            dx = math.sqrt(sum((x - mx) ** 2 for x in xs))
+            dy = math.sqrt(sum((y - my) ** 2 for y in ys))
+            if dx > 0 and dy > 0:
+                pearson_r = round(num / (dx * dy), 4)
+
+        # ── Comfort gap ──
+        mean_pre = sum(comfort_pres) / len(comfort_pres) if comfort_pres else 0
+        mean_post = sum(comfort_posts) / len(comfort_posts) if comfort_posts else 0
+        comfort_gap = round(abs(mean_post - mean_pre), 2)
+
+        # ── Mean t_drop ──
+        mean_t_drop = round(sum(t_drops) / len(t_drops), 4) if t_drops else 0.0
+
+        # ── Distribution data (histogram bins for t_drop) ──
+        if t_drops:
+            bin_min = min(t_drops)
+            bin_max = max(t_drops)
+            n_bins = 20
+            bin_width = (bin_max - bin_min) / n_bins if bin_max != bin_min else 0.1
+            distribution = []
+            for i in range(n_bins):
+                lo = bin_min + i * bin_width
+                hi = lo + bin_width
+                count = sum(1 for td in t_drops if lo <= td < hi or (i == n_bins - 1 and td == hi))
+                distribution.append({
+                    "bin_start": round(lo, 4),
+                    "bin_end": round(hi, 4),
+                    "count": count,
+                    "label": f"{round(lo, 3)} to {round(hi, 3)}",
+                })
+        else:
+            distribution = []
+
+        # ── Type distribution for pie/bar chart ──
+        type_distribution = [
+            {"type": "Compressor", "count": n_compressors, "pct": round(n_compressors / n * 100, 1) if n else 0},
+            {"type": "Expander", "count": n_expanders, "pct": round(n_expanders / n * 100, 1) if n else 0},
+            {"type": "Suppressor", "count": n_suppressors, "pct": round(n_suppressors / n * 100, 1) if n else 0},
+        ]
+
+        # ── Timeline: cumulative N by date ──
+        date_counts = defaultdict(int)
+        for s in subjects:
+            ca = s.get("created_at", "")
+            if ca:
+                day = ca[:10]  # YYYY-MM-DD
+                date_counts[day] += 1
+
+        sorted_dates = sorted(date_counts.keys())
+        cumulative = 0
+        timeline = []
+        for d in sorted_dates:
+            cumulative += date_counts[d]
+            timeline.append({"date": d, "new": date_counts[d], "cumulative_n": cumulative})
+
+        # ── Comfort distribution ──
+        comfort_dist = []
+        if comfort_pres:
+            for val in sorted(set(int(c) for c in comfort_pres)):
+                comfort_dist.append({
+                    "value": val,
+                    "pre_count": sum(1 for c in comfort_pres if int(c) == val),
+                    "post_count": sum(1 for c in comfort_posts if int(c) == val) if comfort_posts else 0,
+                })
+
+        return {
+            "mock": False,
+            "subjects": subjects,
+            "stats": {
+                "n": n,
+                "mean_t_drop": mean_t_drop,
+                "pearson_r": pearson_r,
+                "comfort_gap": comfort_gap,
+                "mean_comfort_pre": round(mean_pre, 2),
+                "mean_comfort_post": round(mean_post, 2),
+                "type_counts": {"Compressor": n_compressors, "Expander": n_expanders, "Suppressor": n_suppressors},
+                "type_pct": {
+                    "Compressor": round(n_compressors / n * 100, 1) if n else 0,
+                    "Expander": round(n_expanders / n * 100, 1) if n else 0,
+                    "Suppressor": round(n_suppressors / n * 100, 1) if n else 0,
+                },
+            },
+            "zero_r_suppressors": {
+                "count": len(zero_r_suppressors),
+                "subjects": zero_r_suppressors,
+                "note": "Subjects with abs(t_drop) < 0.001 — total emotional shutdown, not gradual suppression",
+            },
+            "extreme_suppressor": extreme_suppressor if extreme_suppressor else {
+                "participant_id": "N/A",
+                "t_drop": 0,
+                "type": "Suppressor",
+                "note": "No suppressors found",
+            },
+            "distributions": {
+                "t_drop_histogram": distribution,
+                "type_distribution": type_distribution,
+                "comfort_distribution": comfort_dist,
+            },
+            "timeline": timeline,
+        }
+
+    except Exception as e:
+        return {
+            "mock": True,
+            "error": str(e),
+            "subjects": [],
+            "stats": {
+                "n": 40, "mean_t_drop": -0.015, "pearson_r": 0.311, "comfort_gap": 5.6,
+                "mean_comfort_pre": 0, "mean_comfort_post": 0,
+                "type_counts": {"Compressor": 17, "Expander": 10, "Suppressor": 13},
+                "type_pct": {"Compressor": 42, "Expander": 26, "Suppressor": 32},
+            },
+            "zero_r_suppressors": {"count": 6, "subjects": [], "note": "Fallback data"},
+            "extreme_suppressor": {"participant_id": "SMNB5TA24", "t_drop": 0.466, "type": "Suppressor"},
+            "distributions": {"t_drop_histogram": [], "type_distribution": [], "comfort_distribution": []},
+            "timeline": [],
+        }
+
+
 # ── KNOWLEDGE BASE ─────────────────────────────────────────────
 @app.get("/api/knowledge")
 async def list_knowledge(search: str = "", source_type: str = ""):
@@ -705,6 +920,13 @@ async def email_history():
     return query(
         "SELECT * FROM machine_events WHERE event_type = 'email_sent' ORDER BY timestamp DESC LIMIT 30"
     )
+
+
+# ── HEALTH GRID ───────────────────────────────────────────────
+@app.get("/api/health/grid")
+async def health_grid():
+    """Full infrastructure health check — all services in parallel."""
+    return await health_check_all()
 
 
 # ── LIVE SITE DATA ────────────────────────────────────────────

@@ -221,6 +221,39 @@ One sentence if nervous:
 
 End with: You built this from nothing. Walk in knowing that.""",
     },
+    "research_director": {
+        "schedule": "daily_06:00",
+        "subject_fn": lambda: f"Research Director's Report — {datetime.now().strftime('%A, %B %d')}",
+        "prompt": """You are writing the Research Director's Daily Report for Bryan Leonard. This is a 2-page maximum document that reads like it was written by a chief of staff who worked all night monitoring all of Bryan's projects.
+
+Format exactly like this:
+
+---
+RESEARCH DIRECTOR'S REPORT
+[Date] · Qira LLC · Phoenix, Arizona
+---
+
+DATA YESTERDAY:
+- EGC: [current N from Supabase], [any new subjects in last 24h], current Pearson r, comfort gap
+- LOLM: [last known training status]
+- Codey: [deployment health, any signups]
+- NFET: [local server status]
+
+OVERNIGHT ANALYSIS:
+[2-3 sentences on what patterns, risks, or opportunities Nous identified. Be specific — reference actual numbers, actual subjects, actual code commits.]
+
+WARNING:
+[One real risk Bryan is underweighting. Not generic. Specific to where things actually stand right now.]
+
+PRIORITY ESCALATION:
+[One goal Nous is promoting to CRITICAL status today, with the specific reason why.]
+
+QUESTION FOR BRYAN (answer before noon):
+[One specific question about a decision, direction, or priority that Nous cannot resolve without Bryan's input.]
+
+---
+This report should make Bryan feel like someone competent was watching his work all night. Not motivational. Operational.""",
+    },
 }
 
 
@@ -354,6 +387,7 @@ def preview_email(email_type: str, context_data: dict = None) -> dict:
 # ── SCHEDULE ──────────────────────────────────────────────────
 
 def setup_schedule():
+    schedule.every().day.at("06:00").do(send_email, "research_director")
     schedule.every().day.at("09:00").do(send_email, "morning_brief")
     schedule.every().day.at("14:00").do(send_email, "project_pulse")
     schedule.every().day.at("20:00").do(send_email, "evening_review")
@@ -369,6 +403,7 @@ def setup_schedule():
     schedule.every().thursday.at("15:00").do(send_email, "random_insight")
     schedule.every().saturday.at("11:00").do(send_email, "random_insight")
 
+    print("  06:00 — Research Director's Report")
     print("[EMAIL] Schedule configured")
 
 
