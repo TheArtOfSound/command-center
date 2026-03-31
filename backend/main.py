@@ -19,6 +19,7 @@ import httpx
 
 from database import init_db, seed_data, get_db, query, execute, uid, now
 from emails import start_email_system, send_email, preview_email, EMAIL_TYPES
+from github_intel import scan_all_repos, get_all_repos, get_recent_commits, get_repo
 
 # ── AUTH ───────────────────────────────────────────────────────
 ENV_PATH = Path.home() / "qira" / "command_center" / ".env"
@@ -678,6 +679,54 @@ async def email_history():
     return query(
         "SELECT * FROM machine_events WHERE event_type = 'email_sent' ORDER BY timestamp DESC LIMIT 30"
     )
+
+
+# ── GITHUB INTELLIGENCE ───────────────────────────────────────
+@app.get("/api/github/repos")
+async def github_repos():
+    return get_all_repos()
+
+
+@app.get("/api/github/repos/{repo_name}")
+async def github_repo(repo_name: str):
+    r = get_repo(repo_name)
+    if not r:
+        raise HTTPException(404, "Repo not found — run /api/github/scan first")
+    return r
+
+
+@app.get("/api/github/commits")
+async def github_commits(limit: int = 50):
+    return get_recent_commits(limit)
+
+
+@app.post("/api/github/scan")
+async def github_scan():
+    """Trigger a full GitHub scan (runs in background)."""
+    import threading
+    def _scan():
+        scan_all_repos()
+    threading.Thread(target=_scan, daemon=True).start()
+    return {"status": "scan_started"}
+
+
+@app.post("/api/github/commit-hook")
+async def commit_hook(data: dict):
+    """Called by local git post-commit hooks."""
+    repo = data.get("repo", "")
+    message = data.get("message", "")
+    sha = data.get("sha", "")
+    execute(
+        "INSERT OR IGNORE INTO machine_events (id, event_type, description, project, data, timestamp) VALUES (?,?,?,?,?,?)",
+        (f"hook_{sha}_{repo}", "local_commit", f"Local commit in {repo}: {message[:80]}",
+         repo, json.dumps(data), now()),
+    )
+    for ws in active_ws:
+        try:
+            await ws.send_json({"type": "local_commit", "repo": repo, "message": message, "sha": sha})
+        except:
+            pass
+    return {"received": True}
 
 
 # ── MACHINE / WATCHER ─────────────────────────────────────────
