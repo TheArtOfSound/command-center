@@ -1033,7 +1033,7 @@ async def live_data():
 
         # EGC Rater
         try:
-            resp = await http.head("https://theartofsound.github.io/egcrate/", follow_redirects=True)
+            resp = await http.head("https://theartofsound.github.io/egcstudy/egcrate/", follow_redirects=True)
             results["egcrate_status"] = resp.status_code
         except:
             results["egcrate_status"] = 0

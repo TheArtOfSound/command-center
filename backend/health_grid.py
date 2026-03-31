@@ -17,7 +17,7 @@ async def check_all() -> dict:
         checks = await asyncio.gather(
             _check_url(http, "egc_study", "https://theartofsound.github.io/egcstudy/"),
             _check_url(http, "thegate", "https://theartofsound.github.io/thegate/"),
-            _check_url(http, "egcrate", "https://theartofsound.github.io/egcrate/"),
+            _check_url(http, "egcrate", "https://theartofsound.github.io/egcstudy/egcrate/"),
             _check_url(http, "portfolio", "https://theartofsound.github.io/portfolio/"),
             _check_url(http, "codey_landing", "https://theartofsound.github.io/codey/"),
             _check_url(http, "zenodo", "https://zenodo.org/records/19242315"),
