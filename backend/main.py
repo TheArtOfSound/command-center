@@ -25,6 +25,9 @@ from github_intel import scan_all_repos, get_all_repos, get_recent_commits, get_
 from health_grid import check_all as health_check_all
 from render_intel import get_render_services, get_render_deploys
 from stripe_intel import get_stripe_overview
+from gmail_intel import (get_profile as gmail_profile, search_emails, get_recent_emails,
+                         get_unread_count, get_email_by_id, get_emails_from,
+                         analyze_inbox_summary)
 
 # ── AUTH ───────────────────────────────────────────────────────
 ENV_PATH = Path.home() / "qira" / "command_center" / ".env"
@@ -946,6 +949,42 @@ async def render_deploys(service_id: str):
 @app.get("/api/stripe/overview")
 async def stripe_overview():
     return await get_stripe_overview()
+
+
+# ── GMAIL ──────────────────────────────────────────────────────
+@app.get("/api/gmail/profile")
+async def gmail_profile_endpoint():
+    return gmail_profile()
+
+
+@app.get("/api/gmail/unread")
+async def gmail_unread():
+    return get_unread_count()
+
+
+@app.get("/api/gmail/recent")
+async def gmail_recent(limit: int = 20):
+    return get_recent_emails(limit)
+
+
+@app.get("/api/gmail/search")
+async def gmail_search(q: str, limit: int = 20):
+    return search_emails(q, limit)
+
+
+@app.get("/api/gmail/message/{msg_id}")
+async def gmail_message(msg_id: str):
+    return get_email_by_id(msg_id)
+
+
+@app.get("/api/gmail/from/{sender}")
+async def gmail_from_sender(sender: str, limit: int = 10):
+    return get_emails_from(sender, limit)
+
+
+@app.get("/api/gmail/summary")
+async def gmail_summary():
+    return analyze_inbox_summary()
 
 
 # ── LIVE SITE DATA ────────────────────────────────────────────
