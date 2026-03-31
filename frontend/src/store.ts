@@ -9,10 +9,18 @@ let apiKey = localStorage.getItem('qira_api_key') || ''
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 const API_BASE = isLocal ? '/api' : 'https://qira-cc.onrender.com/api'
 
-const api: AxiosInstance = axios.create({ baseURL: API_BASE })
+const api: AxiosInstance = axios.create({ baseURL: API_BASE, timeout: 30000 })
 api.interceptors.request.use(config => {
   config.headers['X-API-Key'] = apiKey
   return config
+})
+// Retry on failure (Render cold start can take 30-60s)
+api.interceptors.response.use(undefined, async (error) => {
+  const config = error.config
+  if (!config || config._retryCount >= 2) return Promise.reject(error)
+  config._retryCount = (config._retryCount || 0) + 1
+  await new Promise(r => setTimeout(r, 3000))
+  return api(config)
 })
 
 export function setApiKey(key: string) {

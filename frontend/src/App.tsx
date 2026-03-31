@@ -255,10 +255,12 @@ function FadeInSection({ children, delay = 0, className = '' }: { children: Reac
     if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect() } },
-      { threshold: 0.1 }
+      { threshold: 0.05, rootMargin: '100px' }
     )
     observer.observe(el)
-    return () => observer.disconnect()
+    // Fallback: force visible after delay + 1.5s (handles cases where observer doesn't fire)
+    const fallback = setTimeout(() => setVisible(true), (delay * 1000) + 1500)
+    return () => { observer.disconnect(); clearTimeout(fallback) }
   }, [])
 
   return (
