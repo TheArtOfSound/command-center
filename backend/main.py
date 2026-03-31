@@ -674,6 +674,40 @@ async def email_history():
     )
 
 
+# ── PROJECT LINKS ─────────────────────────────────────────────
+@app.get("/api/links")
+async def list_links(project: str = ""):
+    sql = "SELECT * FROM project_links"
+    params = []
+    if project:
+        sql += " WHERE project = ?"
+        params.append(project)
+    sql += " ORDER BY project, name"
+    return query(sql, params)
+
+
+@app.get("/api/links/check")
+async def check_links():
+    """Check which local services are running."""
+    import socket
+    links = query("SELECT * FROM project_links WHERE check_type = 'port'")
+    results = []
+    for link in links:
+        port = link.get("check_port", 0)
+        alive = False
+        if port:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(1)
+                s.connect(("localhost", port))
+                s.close()
+                alive = True
+            except:
+                pass
+        results.append({**link, "alive": alive})
+    return results
+
+
 # ── GITHUB INTELLIGENCE ───────────────────────────────────────
 @app.get("/api/github/repos")
 async def github_repos():
