@@ -644,6 +644,57 @@ async def import_sweep(data: dict):
     return {"imported": imported}
 
 
+# ── MACHINE / WATCHER ─────────────────────────────────────────
+@app.get("/api/machine/status")
+async def machine_status():
+    """Check what is running on the machine."""
+    import subprocess
+    procs = subprocess.run(["ps", "aux"], capture_output=True, text=True).stdout
+
+    return {
+        "watcher_active": "watcher.py" in procs,
+        "codey_backend": "codey" in procs.lower() and "uvicorn" in procs,
+        "lolm_training": "lolm" in procs.lower() and "python" in procs,
+        "nfet_running": "nfet" in procs.lower(),
+        "files_indexed_today": query(
+            "SELECT COUNT(*) as count FROM file_index WHERE last_seen LIKE ?",
+            (date.today().isoformat() + "%",),
+        )[0]["count"] if query("SELECT name FROM sqlite_master WHERE name='file_index'") else 0,
+        "action_items_pending": len(query(
+            "SELECT id FROM tasks WHERE status = 'pending' AND notes LIKE '%Auto-detected%'"
+        )) if True else 0,
+    }
+
+
+@app.get("/api/machine/files")
+async def machine_files(project: str = "", type_filter: str = "", importance: int = 0):
+    """Get indexed files from watcher."""
+    sql = "SELECT * FROM file_index WHERE 1=1"
+    params: list = []
+    if project:
+        sql += " AND project LIKE ?"
+        params.append(f"%{project}%")
+    if type_filter:
+        sql += " AND type = ?"
+        params.append(type_filter)
+    if importance:
+        sql += " AND importance >= ?"
+        params.append(importance)
+    sql += " ORDER BY last_seen DESC LIMIT 100"
+    return query(sql, params)
+
+
+@app.post("/internal/broadcast")
+async def internal_broadcast(data: dict):
+    """Receive broadcast from watcher."""
+    for ws in active_ws:
+        try:
+            await ws.send_json(data)
+        except:
+            pass
+    return {"ok": True}
+
+
 # ── WEBSOCKET ──────────────────────────────────────────────────
 active_ws: list[WebSocket] = []
 

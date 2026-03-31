@@ -116,6 +116,30 @@ TABLES = [
         comfort_gap REAL DEFAULT 0,
         notes TEXT
     )""",
+    """CREATE TABLE IF NOT EXISTS file_index (
+        id TEXT PRIMARY KEY,
+        path TEXT UNIQUE,
+        filename TEXT,
+        extension TEXT,
+        project TEXT DEFAULT '[]',
+        type TEXT DEFAULT 'document',
+        summary TEXT,
+        importance INTEGER DEFAULT 3,
+        tags TEXT DEFAULT '[]',
+        action_items TEXT DEFAULT '[]',
+        content_preview TEXT,
+        file_hash TEXT,
+        last_seen TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )""",
+    """CREATE TABLE IF NOT EXISTS machine_events (
+        id TEXT PRIMARY KEY,
+        event_type TEXT,
+        description TEXT,
+        project TEXT,
+        data TEXT DEFAULT '{}',
+        timestamp TEXT DEFAULT CURRENT_TIMESTAMP
+    )""",
     """CREATE TABLE IF NOT EXISTS health_logs (
         id TEXT PRIMARY KEY,
         date TEXT,
