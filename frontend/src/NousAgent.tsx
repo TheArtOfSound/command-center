@@ -133,10 +133,18 @@ interface Msg { id: number; role: string; text: string; mode?: string; ts: strin
 interface FeedItem { id: number; mode: string; summary: string; ts: string }
 interface Goal { id: number; text: string; project: string; priority: string; done: boolean }
 
+// Persistence helpers
+function loadPersisted(key: string, fallback: any) {
+  try { const v = localStorage.getItem('nous_' + key); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+}
+function persist(key: string, value: any, maxItems?: number) {
+  try { localStorage.setItem('nous_' + key, JSON.stringify(maxItems ? value.slice(-maxItems) : value)); } catch {}
+}
+
 export default function NousAgent() {
-  const [messages, setMessages] = useState<Msg[]>([]);
-  const [goals, setGoals] = useState<Goal[]>(INITIAL_GOALS);
-  const [feed, setFeed] = useState<FeedItem[]>([]);
+  const [messages, setMessages] = useState<Msg[]>(() => loadPersisted('messages', []));
+  const [goals, setGoals] = useState<Goal[]>(() => loadPersisted('goals', INITIAL_GOALS));
+  const [feed, setFeed] = useState<FeedItem[]>(() => loadPersisted('feed', []));
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [agentActive, setAgentActive] = useState(true);
@@ -149,6 +157,16 @@ export default function NousAgent() {
   const intervalRef = useRef(null);
   const startTime = useRef(Date.now());
   const conversationHistory = useRef([]);
+
+  // Persist on change
+  useEffect(() => { persist('messages', messages, 100) }, [messages]);
+  useEffect(() => { persist('goals', goals) }, [goals]);
+  useEffect(() => { persist('feed', feed, 60) }, [feed]);
+
+  // Init conversation history from persisted messages
+  useEffect(() => {
+    conversationHistory.current = messages.map(m => ({ role: m.role === 'agent' ? 'assistant' : 'user', content: m.text }));
+  }, []);
 
   const addFeedItem = useCallback((mode, summary) => {
     const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });

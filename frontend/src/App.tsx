@@ -42,8 +42,7 @@ const icons = {
 
 const VIEWS = [
   { key: 'nucleus', label: 'NUCLEUS', icon: 'brain' },
-  { key: 'nous', label: 'NOUS AGENT', icon: 'brain' },
-  { key: 'intelligence', label: 'INTELLIGENCE', icon: 'zap' },
+  { key: 'nous', label: 'NOUS AGENT', icon: 'zap' },
   { key: 'projects', label: 'PROJECTS', icon: 'folder' },
   { key: 'egc', label: 'EGC RESEARCH', icon: 'flask' },
   { key: 'aronson', label: 'ARONSON PREP', icon: 'phone' },
@@ -374,76 +373,7 @@ function NucleusView() {
 }
 
 // ── INTELLIGENCE VIEW ────────────────────────────────────────
-function IntelligenceView() {
-  const { chatResponse, chatLoading, sendChat } = useStore()
-  const [msg, setMsg] = useState('')
-  const [history, setHistory] = useState<{ role: string; text: string }[]>(() => {
-    const saved = localStorage.getItem('nous_chat_history')
-    return saved ? JSON.parse(saved) : []
-  })
-  const [mode, setMode] = useState('general')
-  const endRef = useRef<HTMLDivElement>(null)
-  const modes = ['general', 'research', 'code', 'writing', 'analysis', 'brainstorm']
-
-  useEffect(() => { localStorage.setItem('nous_chat_history', JSON.stringify(history.slice(-100))) }, [history])
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [history])
-  useEffect(() => {
-    if (chatResponse && !chatLoading) setHistory(h => [...h, { role: 'assistant', text: chatResponse }])
-  }, [chatResponse, chatLoading])
-
-  const send = async () => {
-    if (!msg.trim()) return
-    setHistory(h => [...h, { role: 'user', text: msg }])
-    const m = msg; setMsg('')
-    await sendChat(m, mode)
-  }
-
-  return (
-    <div className="flex flex-col h-[calc(100vh-64px)]">
-      <div className="flex items-center gap-4 mb-4">
-        <SectionTitle>Nous Intelligence</SectionTitle>
-        <div className="flex gap-2 ml-auto">
-          {modes.map(m => (
-            <button key={m} onClick={() => setMode(m)}
-              className={`text-[10px] uppercase tracking-wider px-3 py-1 rounded-full border transition-colors ${mode === m ? 'border-[#2563eb] bg-[#2563eb]/20 text-[#60a5fa]' : 'border-[#1e2d40] text-[#64748b] hover:text-[#e2e8f0]'}`}>
-              {m}
-            </button>
-          ))}
-        </div>
-      </div>
-      <Card className="flex-1 overflow-y-auto mb-4">
-        {history.length === 0 && (
-          <div className="text-[#64748b] text-sm text-center py-20">
-            <div className="text-4xl mb-4 opacity-20">&#x2726;</div>
-            <div className="text-lg text-[#e2e8f0]/40 mb-2">Nous is ready</div>
-            <div>Full context loaded. Ask anything about EGC, LOLM, Codey, NFET, or anything else.</div>
-          </div>
-        )}
-        <div className="space-y-4">
-          {history.map((h, i) => (
-            <div key={i} className={`flex ${h.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-lg p-3 text-sm whitespace-pre-wrap ${h.role === 'user' ? 'bg-[#2563eb]/20 text-[#60a5fa]' : 'bg-[#1a2332] text-[#e2e8f0]'}`}>
-                {h.text}
-              </div>
-            </div>
-          ))}
-          {chatLoading && <div className="flex justify-start"><div className="bg-[#1a2332] rounded-lg p-3 text-sm text-[#64748b] animate-pulse">Thinking...</div></div>}
-          <div ref={endRef} />
-        </div>
-      </Card>
-      <div className="flex gap-2">
-        <input value={msg} onChange={e => setMsg(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), send())}
-          placeholder="Ask Nous anything..."
-          className="flex-1 bg-[#111827] border border-[#1e2d40] rounded-lg px-4 py-3 text-sm text-[#e2e8f0] outline-none focus:border-[#2563eb]" />
-        <button onClick={send} disabled={chatLoading}
-          className="bg-[#2563eb] text-white px-5 py-3 rounded-lg text-sm disabled:opacity-50">
-          <Icon d={icons.send} />
-        </button>
-      </div>
-    </div>
-  )
-}
+// IntelligenceView replaced by NousAgent — see NousAgent.tsx
 
 // ── PROJECTS VIEW ────────────────────────────────────────────
 function ProjectsView() {
@@ -1234,7 +1164,6 @@ export default function App() {
     switch (view) {
       case 'nucleus': return <NucleusView />
       case 'nous': return <NousAgent />
-      case 'intelligence': return <IntelligenceView />
       case 'projects': return <ProjectsView />
       case 'egc': return <EGCView />
       case 'aronson': return <AronsonView />
