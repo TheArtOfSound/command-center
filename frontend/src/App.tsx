@@ -107,12 +107,8 @@ function AuthScreen() {
     if (!key.trim()) return
     // Accept either the password or the API key
     if (key.trim() === ACCESS_PASSWORD) {
-      // Password login — use default API key for remote
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      if (!isLocal) {
-        // For remote, the API key is set via env on Render
-        setApiKey('remote_authenticated')
-      }
+      // Password login — use the password itself as the API key (backend accepts it)
+      setApiKey(ACCESS_PASSWORD)
       setAuthenticated(true)
       setError('')
     } else {
