@@ -79,6 +79,9 @@ interface Store {
   chatLoading: boolean
   sendChat: (message: string, mode?: string) => Promise<void>
 
+  liveData: any | null
+  fetchLiveData: () => Promise<void>
+
   links: any[]
   fetchLinks: (project?: string) => Promise<void>
   linkChecks: any[]
@@ -272,6 +275,14 @@ export const useStore = create<Store>()(
           set({ chatResponse: 'Connection error — is the backend running on port 7777?' })
         }
         set({ chatLoading: false })
+      },
+
+      liveData: null,
+      fetchLiveData: async () => {
+        try {
+          const { data } = await api.get('/live')
+          set({ liveData: data })
+        } catch {}
       },
 
       links: [],

@@ -125,11 +125,12 @@ function AuthScreen() {
 // ── NUCLEUS VIEW ─────────────────────────────────────────────
 function NucleusView() {
   const { nucleus, fetchNucleus, egc, fetchEGC, projects, fetchProjects, tasks, fetchTasks,
-          links, fetchLinks, linkChecks, fetchLinkChecks, githubRepos, fetchGithubRepos } = useStore()
+          links, fetchLinks, linkChecks, fetchLinkChecks, githubRepos, fetchGithubRepos,
+          liveData, fetchLiveData } = useStore()
 
   useEffect(() => {
     fetchNucleus(); fetchEGC(); fetchProjects(); fetchTasks()
-    fetchLinks(); fetchLinkChecks(); fetchGithubRepos()
+    fetchLinks(); fetchLinkChecks(); fetchGithubRepos(); fetchLiveData()
   }, [])
 
   const pendingTasks = tasks.filter((t: any) => t.status === 'pending')
@@ -161,14 +162,72 @@ function NucleusView() {
         <Card><Stat label="Active Projects" value={projects.filter((p: any) => p.status === 'active').length} /></Card>
         <Card><Stat label="Open Tasks" value={nucleus?.active_tasks ?? pendingTasks.length} /></Card>
         <Card><Stat label="Done Today" value={nucleus?.completed_today ?? 0} color="text-[#10b981]" /></Card>
-        <Card><Stat label="EGC N" value={egc?.n ?? 40} color="text-[#f59e0b]" /></Card>
+        <Card><Stat label="EGC N" value={liveData?.egc_n ?? egc?.n ?? 40} color="text-[#f59e0b]" /></Card>
         <Card><Stat label="Pearson r" value={egc?.pearson_r?.toFixed(3) ?? '0.311'} /></Card>
         <Card><Stat label="Aronson" value="PENDING" color="text-[#ef4444]" /></Card>
       </div>
 
-      {/* Service Status */}
-      <SectionTitle>Service Status</SectionTitle>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {/* Live Site Status */}
+      <SectionTitle>Live Sites & Services</SectionTitle>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {liveData && <>
+          <a href="https://theartofsound.github.io/egcstudy/" target="_blank" rel="noopener noreferrer">
+            <Card className="!p-3 hover:border-[#2563eb] cursor-pointer">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${liveData.egc_study_status === 200 ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
+                <span className="text-xs">EGC Study</span>
+                <span className="text-[10px] text-[#10b981] ml-auto">N={liveData.egc_n}</span>
+              </div>
+            </Card>
+          </a>
+          <a href="https://theartofsound.github.io/thegate/" target="_blank" rel="noopener noreferrer">
+            <Card className="!p-3 hover:border-[#2563eb] cursor-pointer">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${liveData.thegate_status === 200 ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
+                <span className="text-xs">The Gate</span>
+              </div>
+            </Card>
+          </a>
+          <a href="https://theartofsound.github.io/egcrate/" target="_blank" rel="noopener noreferrer">
+            <Card className="!p-3 hover:border-[#2563eb] cursor-pointer">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${liveData.egcrate_status === 200 ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
+                <span className="text-xs">EGC Rater</span>
+              </div>
+            </Card>
+          </a>
+          <a href="https://theartofsound.github.io/portfolio/" target="_blank" rel="noopener noreferrer">
+            <Card className="!p-3 hover:border-[#2563eb] cursor-pointer">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${liveData.portfolio_status === 200 ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
+                <span className="text-xs">Portfolio</span>
+              </div>
+            </Card>
+          </a>
+          <a href="https://theartofsound.github.io/codey/" target="_blank" rel="noopener noreferrer">
+            <Card className="!p-3 hover:border-[#2563eb] cursor-pointer">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${liveData.codey_landing_status === 200 ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
+                <span className="text-xs">Codey Landing</span>
+              </div>
+            </Card>
+          </a>
+          <a href="https://zenodo.org/records/19242315" target="_blank" rel="noopener noreferrer">
+            <Card className="!p-3 hover:border-[#2563eb] cursor-pointer">
+              <div className="flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${liveData.preprint_status === 200 ? 'bg-[#10b981]' : liveData.preprint_status > 0 ? 'bg-[#f59e0b]' : 'bg-[#ef4444]'}`} />
+                <span className="text-xs">Preprint (Zenodo)</span>
+              </div>
+            </Card>
+          </a>
+          <Card className="!p-3">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${liveData.nfet_alive ? 'bg-[#10b981]' : 'bg-[#64748b]'}`} />
+              <span className="text-xs">NFET Local</span>
+              <span className="text-[10px] text-[#64748b] ml-auto">{liveData.nfet_alive ? 'RUNNING' : 'offline'}</span>
+            </div>
+          </Card>
+        </>}
         {linkChecks.map((c: any) => (
           <Card key={c.id} className="!p-3">
             <div className="flex items-center gap-2">
@@ -179,6 +238,25 @@ function NucleusView() {
           </Card>
         ))}
       </div>
+
+      {/* GitHub Recent Activity */}
+      {liveData?.github_recent?.length > 0 && (
+        <>
+          <SectionTitle>GitHub Activity</SectionTitle>
+          <Card className="!p-4">
+            <div className="space-y-2">
+              {liveData.github_recent.map((e: any, i: number) => (
+                <div key={i} className="flex items-center gap-3 text-xs">
+                  <span className={`w-1.5 h-1.5 rounded-full ${e.type === 'PushEvent' ? 'bg-[#10b981]' : 'bg-[#60a5fa]'}`} />
+                  <span className="text-[#64748b]">{e.type.replace('Event', '')}</span>
+                  <span className="text-[#e2e8f0]">{e.repo.replace('TheArtOfSound/', '')}</span>
+                  <span className="text-[#64748b] ml-auto">{new Date(e.created_at).toLocaleTimeString()}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </>
+      )}
 
       {/* Project Health with Links */}
       <SectionTitle>Project Health</SectionTitle>

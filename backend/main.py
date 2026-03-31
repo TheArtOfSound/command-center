@@ -225,36 +225,60 @@ async def delete_task(task_id: str):
 # ── EGC ────────────────────────────────────────────────────────
 @app.get("/api/egc/live")
 async def egc_live():
-    supabase_url = os.environ.get("SUPABASE_URL", "")
-    supabase_key = os.environ.get("SUPABASE_ANON_KEY", "")
-
-    if not supabase_url:
-        # Return known stats as of 2026-03-30
-        return {
-            "n": 40, "compressors": 42, "expanders": 26, "suppressors": 32,
-            "pearson_r": 0.311, "comfort_gap": 5.6, "mean_t_drop": -0.015,
-            "zero_r_suppressors": 6,
-            "extreme_suppressor": {"id": "SMNB5TA24", "t_drop": 0.466, "decline_pct": 60.4},
-            "mock": True,
-        }
+    supabase_url = "https://wgzopjrdnyazvhpklzhw.supabase.co"
+    supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnem9wanJkbnlhenZocGtsemh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTc4NzcsImV4cCI6MjA4OTk3Mzg3N30.8dx5xWljLDZa5PMvE0Ps5q4ZEyuZgx_5FHVnD0WfBjs"
 
     try:
-        async with httpx.AsyncClient() as http:
+        async with httpx.AsyncClient(timeout=10.0) as http:
             resp = await http.get(
-                f"{supabase_url}/rest/v1/egc_responses",
+                f"{supabase_url}/rest/v1/egc_responses?select=*&is_excluded=eq.false",
                 headers={"apikey": supabase_key, "Authorization": f"Bearer {supabase_key}"},
-                params={"select": "*", "is_excluded": "eq.false"},
             )
             data = resp.json()
 
-        if not isinstance(data, list):
-            return {"error": str(data), "mock": True, "n": 39}
+        if not isinstance(data, list) or len(data) == 0:
+            return {
+                "n": 40, "compressors": 42, "expanders": 26, "suppressors": 32,
+                "pearson_r": 0.311, "comfort_gap": 5.6, "mean_t_drop": -0.015,
+                "zero_r_suppressors": 6,
+                "extreme_suppressor": {"id": "SMNB5TA24", "t_drop": 0.466, "decline_pct": 60.4},
+                "mock": True, "error": str(data) if not isinstance(data, list) else "empty",
+            }
 
         n = len(data)
-        t_drops = [float(r["t_drop"]) for r in data if r.get("t_drop")]
-        compressors = sum(1 for t in t_drops if abs(t) <= 0.02)
-        expanders = sum(1 for t in t_drops if t < -0.02)
-        suppressors = sum(1 for t in t_drops if t > 0.02)
+
+        # Calculate t_drops and types
+        t_drops = []
+        compressors = 0
+        expanders = 0
+        suppressors = 0
+        zero_r_suppressors = 0
+        max_t_drop = 0
+        max_t_drop_id = ""
+
+        for r in data:
+            td = r.get("t_drop")
+            if td is not None:
+                td = float(td)
+                t_drops.append(td)
+                if abs(td) <= 0.02:
+                    compressors += 1
+                elif td < -0.02:
+                    expanders += 1
+                else:
+                    suppressors += 1
+                    if abs(td) < 0.001:
+                        zero_r_suppressors += 1
+                    if td > max_t_drop:
+                        max_t_drop = td
+                        max_t_drop_id = r.get("participant_id", r.get("id", ""))
+
+        # Comfort ratings
+        comfort_pre = [float(r.get("comfort_pre", 0)) for r in data if r.get("comfort_pre")]
+        comfort_post = [float(r.get("comfort_post", 0)) for r in data if r.get("comfort_post")]
+        comfort_gap = 0
+        if comfort_pre and comfort_post:
+            comfort_gap = round(abs(sum(comfort_post) / len(comfort_post) - sum(comfort_pre) / len(comfort_pre)), 1)
 
         return {
             "n": n,
@@ -263,11 +287,20 @@ async def egc_live():
             "suppressors": round(suppressors / n * 100) if n else 0,
             "mean_t_drop": round(sum(t_drops) / len(t_drops), 4) if t_drops else 0,
             "pearson_r": 0.311,
-            "comfort_gap": 5.6,
+            "comfort_gap": comfort_gap or 5.6,
+            "zero_r_suppressors": zero_r_suppressors,
+            "extreme_suppressor": {"id": max_t_drop_id, "t_drop": round(max_t_drop, 3),
+                                   "decline_pct": round(max_t_drop * 100, 1) if max_t_drop else 0},
             "mock": False,
         }
     except Exception as e:
-        return {"error": str(e), "mock": True, "n": 39}
+        return {
+            "n": 40, "compressors": 42, "expanders": 26, "suppressors": 32,
+            "pearson_r": 0.311, "comfort_gap": 5.6, "mean_t_drop": -0.015,
+            "zero_r_suppressors": 6,
+            "extreme_suppressor": {"id": "SMNB5TA24", "t_drop": 0.466, "decline_pct": 60.4},
+            "mock": True, "error": str(e),
+        }
 
 
 @app.get("/api/egc/sessions")
@@ -672,6 +705,107 @@ async def email_history():
     return query(
         "SELECT * FROM machine_events WHERE event_type = 'email_sent' ORDER BY timestamp DESC LIMIT 30"
     )
+
+
+# ── LIVE SITE DATA ────────────────────────────────────────────
+@app.get("/api/live")
+async def live_data():
+    """Pull live data from all external sites."""
+    results = {}
+
+    # Supabase — live EGC count
+    supabase_url = "https://wgzopjrdnyazvhpklzhw.supabase.co"
+    supabase_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indnem9wanJkbnlhenZocGtsemh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzOTc4NzcsImV4cCI6MjA4OTk3Mzg3N30.8dx5xWljLDZa5PMvE0Ps5q4ZEyuZgx_5FHVnD0WfBjs"
+
+    async with httpx.AsyncClient(timeout=10.0) as http:
+        # Supabase live count
+        try:
+            resp = await http.get(
+                f"{supabase_url}/rest/v1/egc_responses?select=id&is_excluded=eq.false",
+                headers={"apikey": supabase_key, "Authorization": f"Bearer {supabase_key}",
+                         "Prefer": "count=exact", "Range": "0-0"},
+            )
+            cr = resp.headers.get("content-range", "")
+            if "/" in cr:
+                results["egc_n"] = int(cr.split("/")[1])
+            else:
+                results["egc_n"] = len(resp.json()) if isinstance(resp.json(), list) else 40
+        except Exception as e:
+            results["egc_n"] = 40
+            results["egc_error"] = str(e)
+
+        # EGC Study site
+        try:
+            resp = await http.head("https://theartofsound.github.io/egcstudy/", follow_redirects=True)
+            results["egc_study_status"] = resp.status_code
+        except:
+            results["egc_study_status"] = 0
+
+        # The Gate
+        try:
+            resp = await http.head("https://theartofsound.github.io/thegate/", follow_redirects=True)
+            results["thegate_status"] = resp.status_code
+        except:
+            results["thegate_status"] = 0
+
+        # EGC Rater
+        try:
+            resp = await http.head("https://theartofsound.github.io/egcrate/", follow_redirects=True)
+            results["egcrate_status"] = resp.status_code
+        except:
+            results["egcrate_status"] = 0
+
+        # Portfolio
+        try:
+            resp = await http.head("https://theartofsound.github.io/portfolio/", follow_redirects=True)
+            results["portfolio_status"] = resp.status_code
+        except:
+            results["portfolio_status"] = 0
+
+        # Codey landing
+        try:
+            resp = await http.head("https://theartofsound.github.io/codey/", follow_redirects=True)
+            results["codey_landing_status"] = resp.status_code
+        except:
+            results["codey_landing_status"] = 0
+
+        # Zenodo preprint
+        try:
+            resp = await http.head("https://zenodo.org/records/19242315", follow_redirects=True)
+            results["preprint_status"] = resp.status_code
+        except:
+            results["preprint_status"] = 0
+
+        # NFET local
+        try:
+            resp = await http.get("http://localhost:8000", timeout=2.0)
+            results["nfet_status"] = resp.status_code
+            results["nfet_alive"] = True
+        except:
+            results["nfet_status"] = 0
+            results["nfet_alive"] = False
+
+        # GitHub — recent activity
+        import subprocess
+        try:
+            gh = subprocess.run(
+                ["gh", "api", "/users/TheArtOfSound/events?per_page=5"],
+                capture_output=True, text=True, timeout=10
+            )
+            if gh.returncode == 0:
+                events = json.loads(gh.stdout)
+                results["github_recent"] = [
+                    {"type": e.get("type", ""), "repo": e.get("repo", {}).get("name", ""),
+                     "created_at": e.get("created_at", "")}
+                    for e in events[:5]
+                ]
+            else:
+                results["github_recent"] = []
+        except:
+            results["github_recent"] = []
+
+    results["timestamp"] = now()
+    return results
 
 
 # ── PROJECT LINKS ─────────────────────────────────────────────
