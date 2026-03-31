@@ -79,6 +79,19 @@ interface Store {
   chatLoading: boolean
   sendChat: (message: string, mode?: string) => Promise<void>
 
+  links: any[]
+  fetchLinks: (project?: string) => Promise<void>
+  linkChecks: any[]
+  fetchLinkChecks: () => Promise<void>
+
+  githubRepos: any[]
+  fetchGithubRepos: () => Promise<void>
+
+  emailTypes: any
+  fetchEmailTypes: () => Promise<void>
+  emailHistory: any[]
+  fetchEmailHistory: () => Promise<void>
+
   // Session tracking
   sessionStart: string | null
   setSessionStart: (t: string) => void
@@ -259,6 +272,45 @@ export const useStore = create<Store>()(
           set({ chatResponse: 'Connection error — is the backend running on port 7777?' })
         }
         set({ chatLoading: false })
+      },
+
+      links: [],
+      fetchLinks: async (project) => {
+        try {
+          const params = project ? { project } : {}
+          const { data } = await api.get('/links', { params })
+          set({ links: data })
+        } catch {}
+      },
+      linkChecks: [],
+      fetchLinkChecks: async () => {
+        try {
+          const { data } = await api.get('/links/check')
+          set({ linkChecks: data })
+        } catch {}
+      },
+
+      githubRepos: [],
+      fetchGithubRepos: async () => {
+        try {
+          const { data } = await api.get('/github/repos')
+          set({ githubRepos: data })
+        } catch {}
+      },
+
+      emailTypes: {},
+      fetchEmailTypes: async () => {
+        try {
+          const { data } = await api.get('/emails/types')
+          set({ emailTypes: data })
+        } catch {}
+      },
+      emailHistory: [],
+      fetchEmailHistory: async () => {
+        try {
+          const { data } = await api.get('/emails/history')
+          set({ emailHistory: data })
+        } catch {}
       },
 
       sessionStart: null,

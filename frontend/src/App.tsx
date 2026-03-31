@@ -124,11 +124,23 @@ function AuthScreen() {
 
 // ── NUCLEUS VIEW ─────────────────────────────────────────────
 function NucleusView() {
-  const { nucleus, fetchNucleus, egc, fetchEGC, projects, fetchProjects, tasks, fetchTasks } = useStore()
-  useEffect(() => { fetchNucleus(); fetchEGC(); fetchProjects(); fetchTasks() }, [])
+  const { nucleus, fetchNucleus, egc, fetchEGC, projects, fetchProjects, tasks, fetchTasks,
+          links, fetchLinks, linkChecks, fetchLinkChecks, githubRepos, fetchGithubRepos } = useStore()
+
+  useEffect(() => {
+    fetchNucleus(); fetchEGC(); fetchProjects(); fetchTasks()
+    fetchLinks(); fetchLinkChecks(); fetchGithubRepos()
+  }, [])
 
   const pendingTasks = tasks.filter((t: any) => t.status === 'pending')
   const inProgress = tasks.filter((t: any) => t.status === 'in_progress')
+
+  // Group links by project
+  const linksByProject: Record<string, any[]> = {}
+  links.forEach((l: any) => {
+    if (!linksByProject[l.project]) linksByProject[l.project] = []
+    linksByProject[l.project].push(l)
+  })
 
   return (
     <div className="space-y-6">
@@ -154,21 +166,50 @@ function NucleusView() {
         <Card><Stat label="Aronson" value="PENDING" color="text-[#ef4444]" /></Card>
       </div>
 
-      <SectionTitle>Project Health</SectionTitle>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {projects.map((p: any) => (
-          <Card key={p.id} className="cursor-pointer hover:border-[#2563eb] transition-colors">
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-semibold text-sm">{p.name}</span>
-              <Badge text={p.status} color={p.status === 'active' ? 'bg-[#10b981]/20 text-[#10b981]' : 'bg-[#64748b]/20 text-[#64748b]'} />
+      {/* Service Status */}
+      <SectionTitle>Service Status</SectionTitle>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {linkChecks.map((c: any) => (
+          <Card key={c.id} className="!p-3">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${c.alive ? 'bg-[#10b981]' : 'bg-[#ef4444]'}`} />
+              <span className="text-xs">{c.name}</span>
+              <span className="text-[10px] text-[#64748b] ml-auto">:{c.check_port}</span>
             </div>
-            <div className="text-xs text-[#64748b] mb-3 line-clamp-2">{p.description}</div>
-            <HealthBar value={p.health} />
-            <div className="text-[10px] text-[#64748b] mt-1">Health: {p.health}/10</div>
           </Card>
         ))}
       </div>
 
+      {/* Project Health with Links */}
+      <SectionTitle>Project Health</SectionTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {projects.map((p: any) => {
+          const pLinks = linksByProject[p.name] || linksByProject[p.id?.toUpperCase()] || []
+          return (
+            <Card key={p.id} className="hover:border-[#2563eb] transition-colors">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-semibold text-sm">{p.name}</span>
+                <Badge text={p.status} color={p.status === 'active' ? 'bg-[#10b981]/20 text-[#10b981]' : 'bg-[#64748b]/20 text-[#64748b]'} />
+              </div>
+              <div className="text-xs text-[#64748b] mb-2 line-clamp-2">{p.description}</div>
+              <HealthBar value={p.health} />
+              <div className="text-[10px] text-[#64748b] mt-1 mb-2">Health: {p.health}/10</div>
+              {pLinks.length > 0 && (
+                <div className="border-t border-[#1e2d40] pt-2 mt-2 space-y-1">
+                  {pLinks.slice(0, 4).map((l: any) => (
+                    <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-[10px] text-[#60a5fa] hover:text-[#2563eb] transition-colors">
+                      <span className="text-[#64748b]">&rarr;</span> {l.name}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </Card>
+          )
+        })}
+      </div>
+
+      {/* EGC Live */}
       {egc && (
         <>
           <SectionTitle>EGC Research — Live</SectionTitle>
@@ -186,6 +227,46 @@ function NucleusView() {
         </>
       )}
 
+      {/* GitHub Repos */}
+      {githubRepos.length > 0 && (
+        <>
+          <SectionTitle>GitHub Repositories ({githubRepos.length})</SectionTitle>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {githubRepos.map((r: any) => (
+              <a key={r.id} href={`https://github.com/${r.full_name}`} target="_blank" rel="noopener noreferrer">
+                <Card className="!p-3 hover:border-[#2563eb] transition-colors cursor-pointer">
+                  <div className="text-xs font-semibold">{r.name}</div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge text={r.project || 'Unknown'} />
+                    {r.language && <span className="text-[10px] text-[#64748b]">{r.language}</span>}
+                  </div>
+                </Card>
+              </a>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Quick Links */}
+      <SectionTitle>Quick Links</SectionTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {Object.entries(linksByProject).map(([project, pLinks]) => (
+          <Card key={project} className="!p-4">
+            <div className="text-xs text-[#60a5fa] uppercase tracking-wider mb-2">{project}</div>
+            <div className="space-y-1">
+              {(pLinks as any[]).map((l: any) => (
+                <a key={l.id} href={l.url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-between text-xs hover:text-[#60a5fa] transition-colors group">
+                  <span>{l.name}</span>
+                  <span className="text-[10px] text-[#64748b] group-hover:text-[#60a5fa] truncate max-w-[200px]">{l.url.replace('https://', '').replace('http://', '')}</span>
+                </a>
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Active Work */}
       <SectionTitle>Active Work</SectionTitle>
       <Card>
         {inProgress.length === 0 && pendingTasks.length === 0 ? (
