@@ -1429,17 +1429,28 @@ export default function App() {
     }
   }
 
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen relative">
+      {/* Mobile hamburger */}
+      <button onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="md:hidden fixed top-3 left-3 z-50 bg-[#111827] border border-[#1e2d40] rounded-lg p-2 text-[#60a5fa]">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+
+      {/* Sidebar overlay on mobile */}
+      {sidebarOpen && <div className="md:hidden fixed inset-0 bg-black/50 z-30" onClick={() => setSidebarOpen(false)} />}
+
       {/* Sidebar */}
-      <nav className="w-[220px] bg-[#111827] border-r border-[#1e2d40] flex flex-col shrink-0">
+      <nav className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 fixed md:relative z-40 w-[220px] bg-[#111827] border-r border-[#1e2d40] flex flex-col shrink-0 h-full transition-transform duration-200`}>
         <div className="px-5 py-6 border-b border-[#1e2d40]">
           <div className="text-[10px] text-[#64748b] tracking-[0.3em] uppercase">QIRA COMMAND</div>
           <div className="text-lg text-[#60a5fa] mt-1 font-semibold">Bryan Leonard</div>
         </div>
         <div className="flex-1 py-2 overflow-y-auto">
           {VIEWS.map(({ key, label, icon }) => (
-            <button key={key} onClick={() => setView(key)}
+            <button key={key} onClick={() => { setView(key); setSidebarOpen(false) }}
               className={`w-full flex items-center gap-3 px-5 py-2.5 text-left transition-colors ${view === key ? 'bg-[#2563eb]/10 text-[#60a5fa] border-l-2 border-[#2563eb]' : 'text-[#64748b] hover:text-[#e2e8f0] border-l-2 border-transparent'}`}>
               <Icon d={(icons as any)[icon] || icons.folder} className="shrink-0" />
               <span className="text-[11px] tracking-[0.1em] uppercase">{label}</span>
@@ -1458,7 +1469,7 @@ export default function App() {
       </nav>
 
       {/* Main */}
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 w-full">
         <AnimatePresence mode="wait">
           <motion.div key={view} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15 }}>
             {renderView()}

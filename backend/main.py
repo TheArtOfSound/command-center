@@ -1115,6 +1115,13 @@ async def live_data():
         except:
             results["preprint_status"] = 0
 
+        # Qira Website
+        try:
+            resp = await http.head("https://theartofsound.github.io/qira-website/", follow_redirects=True)
+            results["qira_website_status"] = resp.status_code
+        except:
+            results["qira_website_status"] = 0
+
         # NFET local
         try:
             resp = await http.get("http://localhost:8000", timeout=2.0)
