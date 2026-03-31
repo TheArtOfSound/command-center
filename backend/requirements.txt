@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+httpx
+websockets
+python-dotenv
+pydantic
+groq
+sendgrid
+schedule
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+anthropic
+aiosqlite
+sqlalchemy

@@ -20,18 +20,70 @@ import httpx
 
 from database import init_db, seed_data, get_db, query, execute, uid, now
 from ai_client import chat as ai_chat
-from council import council as agent_council
-from emails import start_email_system, send_email, preview_email, EMAIL_TYPES
-from github_intel import scan_all_repos, get_all_repos, get_recent_commits, get_repo
-from github_deep import (full_scan as deep_full_scan, get_deep_repos, get_deep_repo,
-                         get_repo_files as deep_get_files, get_file_content as deep_get_file,
-                         search_code as deep_search, build_live_repo_context)
-from health_grid import check_all as health_check_all
-from render_intel import get_render_services, get_render_deploys
-from stripe_intel import get_stripe_overview
-from gmail_intel import (get_profile as gmail_profile, search_emails, get_recent_emails,
-                         get_unread_count, get_email_by_id, get_emails_from,
-                         analyze_inbox_summary)
+
+# Conditional imports — some modules need local-only tools (gh CLI, Gmail token, etc.)
+try:
+    from council import council as agent_council
+except Exception:
+    agent_council = None
+
+try:
+    from emails import start_email_system, send_email, preview_email, EMAIL_TYPES
+except Exception:
+    start_email_system = lambda: None
+    send_email = lambda *a, **k: False
+    preview_email = lambda *a, **k: {}
+    EMAIL_TYPES = {}
+
+try:
+    from github_intel import scan_all_repos, get_all_repos, get_recent_commits, get_repo
+except Exception:
+    scan_all_repos = lambda: []
+    get_all_repos = lambda: []
+    get_recent_commits = lambda *a: []
+    get_repo = lambda *a: None
+
+try:
+    from github_deep import (full_scan as deep_full_scan, get_deep_repos, get_deep_repo,
+                             get_repo_files as deep_get_files, get_file_content as deep_get_file,
+                             search_code as deep_search, build_live_repo_context)
+except Exception:
+    deep_full_scan = lambda: None
+    get_deep_repos = lambda: []
+    get_deep_repo = lambda *a: None
+    deep_get_files = lambda *a: []
+    deep_get_file = lambda *a: None
+    deep_search = lambda *a: []
+    build_live_repo_context = lambda: ""
+
+try:
+    from health_grid import check_all as health_check_all
+except Exception:
+    async def health_check_all(): return {}
+
+try:
+    from render_intel import get_render_services, get_render_deploys
+except Exception:
+    async def get_render_services(): return {"services": []}
+    async def get_render_deploys(*a): return {"deploys": []}
+
+try:
+    from stripe_intel import get_stripe_overview
+except Exception:
+    async def get_stripe_overview(): return {"connected": False}
+
+try:
+    from gmail_intel import (get_profile as gmail_profile, search_emails, get_recent_emails,
+                             get_unread_count, get_email_by_id, get_emails_from,
+                             analyze_inbox_summary)
+except Exception:
+    def gmail_profile(): return {"error": "Gmail not available on this server"}
+    def search_emails(*a): return {"messages": []}
+    def get_recent_emails(*a): return {"messages": []}
+    def get_unread_count(): return {"unread": 0}
+    def get_email_by_id(*a): return {"error": "not available"}
+    def get_emails_from(*a): return {"messages": []}
+    def analyze_inbox_summary(): return {"error": "not available"}
 
 # ── AUTH ───────────────────────────────────────────────────────
 ENV_PATH = Path.home() / "qira" / "command_center" / ".env"
