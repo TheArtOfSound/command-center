@@ -1,0 +1,6 @@
+data/nucleus.db
+.env
+logs/
+__pycache__/
+node_modules/
+frontend/dist/
