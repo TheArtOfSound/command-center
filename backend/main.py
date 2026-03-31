@@ -23,6 +23,8 @@ from ai_client import chat as ai_chat
 from emails import start_email_system, send_email, preview_email, EMAIL_TYPES
 from github_intel import scan_all_repos, get_all_repos, get_recent_commits, get_repo
 from health_grid import check_all as health_check_all
+from render_intel import get_render_services, get_render_deploys
+from stripe_intel import get_stripe_overview
 
 # ── AUTH ───────────────────────────────────────────────────────
 ENV_PATH = Path.home() / "qira" / "command_center" / ".env"
@@ -927,6 +929,23 @@ async def email_history():
 async def health_grid():
     """Full infrastructure health check — all services in parallel."""
     return await health_check_all()
+
+
+# ── RENDER ─────────────────────────────────────────────────────
+@app.get("/api/render/services")
+async def render_services():
+    return await get_render_services()
+
+
+@app.get("/api/render/deploys/{service_id}")
+async def render_deploys(service_id: str):
+    return await get_render_deploys(service_id)
+
+
+# ── STRIPE ─────────────────────────────────────────────────────
+@app.get("/api/stripe/overview")
+async def stripe_overview():
+    return await get_stripe_overview()
 
 
 # ── LIVE SITE DATA ────────────────────────────────────────────
