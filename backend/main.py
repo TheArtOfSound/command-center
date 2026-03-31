@@ -14,10 +14,10 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Quer
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-import anthropic
 import httpx
 
 from database import init_db, seed_data, get_db, query, execute, uid, now
+from ai_client import chat as ai_chat
 from emails import start_email_system, send_email, preview_email, EMAIL_TYPES
 from github_intel import scan_all_repos, get_all_repos, get_recent_commits, get_repo
 
@@ -60,8 +60,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-claude = anthropic.Anthropic()
 
 BRYAN_SYSTEM = """You are Nous — Bryan Leonard's AI partner inside his Command Center.
 
@@ -116,15 +114,10 @@ class ChatRequest(BaseModel):
 
 
 @app.post("/api/intelligence/chat")
-async def chat(req: ChatRequest):
+async def chat_endpoint(req: ChatRequest):
     try:
-        resp = claude.messages.create(
-            model="claude-sonnet-4-5-20250514",
-            max_tokens=4000,
-            system=BRYAN_SYSTEM,
-            messages=[{"role": "user", "content": req.message}],
-        )
-        return {"response": resp.content[0].text, "mode": req.mode}
+        response = ai_chat(BRYAN_SYSTEM, req.message, 4000)
+        return {"response": response, "mode": req.mode}
     except Exception as e:
         return {"response": f"Error: {str(e)}", "mode": req.mode}
 

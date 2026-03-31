@@ -13,8 +13,9 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-import anthropic
 import schedule
+
+from ai_client import chat as ai_chat
 
 DB_PATH = Path.home() / "qira" / "command_center" / "data" / "nucleus.db"
 
@@ -31,7 +32,6 @@ SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", _env_vars.get("SENDGRID_AP
 FROM_EMAIL = os.environ.get("SENDGRID_FROM", _env_vars.get("SENDGRID_FROM", "nous@qira.ai"))
 TO_EMAIL = "bryanleonard237@gmail.com"
 
-claude = anthropic.Anthropic()
 sg = None
 
 if SENDGRID_API_KEY:
@@ -290,14 +290,9 @@ def generate_email(email_type: str, context_data: dict = None) -> dict:
     if context_data:
         ctx += f"\n\nSPECIFIC CONTEXT:\n{json.dumps(context_data, indent=2)}"
 
-    resp = claude.messages.create(
-        model="claude-sonnet-4-5-20250514",
-        max_tokens=1500,
-        system=ctx,
-        messages=[{"role": "user", "content": config["prompt"]}],
-    )
+    body = ai_chat(ctx, config["prompt"], 1500)
 
-    return {"subject": config["subject_fn"](), "body": resp.content[0].text}
+    return {"subject": config["subject_fn"](), "body": body}
 
 
 # ── SEND ──────────────────────────────────────────────────────

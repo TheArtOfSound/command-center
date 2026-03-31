@@ -13,12 +13,10 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 
-import anthropic
+from ai_client import chat_fast as ai_classify
 
 DB_PATH = Path.home() / "qira" / "command_center" / "data" / "nucleus.db"
 GITHUB_USERNAME = "TheArtOfSound"
-
-claude = anthropic.Anthropic()
 
 KNOWN_REPOS = {
     "egcstudy": "EGC", "thegate": "EGC",
@@ -238,13 +236,10 @@ Recent commits: {'; '.join(c['message'] for c in data['commits'][:5])}
 File sample: {', '.join(data['file_tree'][:15])}
 README: {data['readme'][:500]}"""
 
-        resp = claude.messages.create(
-            model="claude-haiku-4-5-20251001", max_tokens=400,
-            messages=[{"role": "user", "content": f"""Analyze this repo briefly. JSON only:
+        text = ai_classify("You are a code analyst. Respond with JSON only.", f"""Analyze this repo briefly. JSON only:
 {ctx}
-{{"purpose":"one sentence","status":"active|stale|complete","health":1-10,"next_action":"one sentence","project":"EGC|LOLM|Codey|NFET|System|Unknown","priority":1-10}}"""}]
-        )
-        text = resp.content[0].text.strip()
+{{"purpose":"one sentence","status":"active|stale|complete","health":1-10,"next_action":"one sentence","project":"EGC|LOLM|Codey|NFET|System|Unknown","priority":1-10}}""")
+        text = text.strip()
         if "```" in text:
             text = text.split("```")[1]
             if text.startswith("json"):
