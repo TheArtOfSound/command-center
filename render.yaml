@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: qira-command-center
+    runtime: python
+    buildCommand: pip install fastapi uvicorn sqlalchemy aiosqlite httpx websockets python-dotenv pydantic anthropic groq sendgrid schedule google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: QIRA_API_KEY
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: SENDGRID_FROM
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: RENDER_API_KEY
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false

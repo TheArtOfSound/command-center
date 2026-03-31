@@ -13,6 +13,11 @@ const AGENTS = [
 const AGENT_MAP = Object.fromEntries(AGENTS.map(a => [a.name, a]))
 const AGENT_NAMES = AGENTS.map(a => a.name)
 
+function getApiBase() {
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  return isLocal ? '' : 'https://qira-cc.onrender.com'
+}
+
 function getApiKey() {
   return localStorage.getItem('qira_api_key') || ''
 }
@@ -327,7 +332,7 @@ export default function CouncilView() {
   // ── FETCH HISTORY ─────────────────────────────────────────
   const fetchHistory = useCallback(async () => {
     try {
-      const res = await fetch('/api/bus/history?limit=50', { headers: apiHeaders() })
+      const res = await fetch(getApiBase() + '/api/bus/history?limit=50', { headers: apiHeaders() })
       if (!res.ok) return
       const data = await res.json()
       const msgs = Array.isArray(data) ? data : data.messages || []
@@ -355,7 +360,7 @@ export default function CouncilView() {
   // ── FETCH STATUS ──────────────────────────────────────────
   const fetchStatus = useCallback(async () => {
     try {
-      const res = await fetch('/api/agents/status', { headers: apiHeaders() })
+      const res = await fetch(getApiBase() + '/api/agents/status', { headers: apiHeaders() })
       if (!res.ok) return
       const data = await res.json()
       setAgentStatus(data.agents || [])
@@ -407,7 +412,7 @@ export default function CouncilView() {
     }
 
     try {
-      await fetch('/api/bus/publish', {
+      await fetch(getApiBase() + '/api/bus/publish', {
         method: 'POST',
         headers: apiHeaders(),
         body: JSON.stringify({ content: text, to: target }),
@@ -421,7 +426,7 @@ export default function CouncilView() {
   // ── TRIGGER AGENT ─────────────────────────────────────────
   const triggerAgent = async (name: string) => {
     try {
-      await fetch(`/api/agents/${name}/trigger`, {
+      await fetch(`${getApiBase()}/api/agents/${name}/trigger`, {
         method: 'POST',
         headers: apiHeaders(),
       })
@@ -433,7 +438,7 @@ export default function CouncilView() {
   const conveneCouncil = async () => {
     if (!topicInput.trim()) return
     try {
-      await fetch('/api/council/convene', {
+      await fetch(getApiBase() + '/api/council/convene', {
         method: 'POST',
         headers: apiHeaders(),
         body: JSON.stringify({ topic: topicInput.trim() }),
@@ -449,7 +454,7 @@ export default function CouncilView() {
   // ── CLOSE COUNCIL ─────────────────────────────────────────
   const closeCouncil = async () => {
     try {
-      await fetch('/api/council/close', {
+      await fetch(getApiBase() + '/api/council/close', {
         method: 'POST',
         headers: apiHeaders(),
       })

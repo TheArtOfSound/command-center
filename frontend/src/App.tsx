@@ -95,14 +95,31 @@ function HealthBar({ value, max = 10 }: { value: number; max?: number }) {
 }
 
 // ── AUTH SCREEN ──────────────────────────────────────────────
+// Password for public access
+const ACCESS_PASSWORD = 'Awdrjki100010101110e!'
+
 function AuthScreen() {
   const [key, setKey] = useState('')
+  const [error, setError] = useState('')
   const { setAuthenticated } = useStore()
 
   const submit = () => {
-    if (key.trim()) {
+    if (!key.trim()) return
+    // Accept either the password or the API key
+    if (key.trim() === ACCESS_PASSWORD) {
+      // Password login — use default API key for remote
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      if (!isLocal) {
+        // For remote, the API key is set via env on Render
+        setApiKey('remote_authenticated')
+      }
+      setAuthenticated(true)
+      setError('')
+    } else {
+      // Try as API key
       setApiKey(key.trim())
       setAuthenticated(true)
+      setError('')
     }
   }
 
@@ -110,12 +127,13 @@ function AuthScreen() {
     <div className="min-h-screen bg-[#0a0e1a] flex items-center justify-center">
       <div className="bg-[#111827] border border-[#1e2d40] rounded-xl p-8 w-[400px]">
         <div className="text-[10px] text-[#64748b] tracking-[0.3em] uppercase mb-1">QIRA COMMAND CENTER</div>
-        <div className="text-xl text-[#60a5fa] font-semibold mb-6">Authentication Required</div>
-        <div className="text-xs text-[#64748b] mb-4">Enter the API key from ~/qira/command_center/.env</div>
+        <div className="text-xl text-[#60a5fa] font-semibold mb-6">Bryan Leonard — Qira LLC</div>
+        <div className="text-xs text-[#64748b] mb-4">Enter password or API key</div>
         <input value={key} onChange={e => setKey(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()}
-          type="password" placeholder="QIRA_API_KEY"
+          type="password" placeholder="Password"
           className="w-full bg-[#0a0e1a] border border-[#1e2d40] rounded-lg px-4 py-3 text-sm text-[#e2e8f0] outline-none focus:border-[#2563eb] mb-4" />
+        {error && <div className="text-xs text-[#ef4444] mb-3">{error}</div>}
         <button onClick={submit}
           className="w-full bg-[#2563eb] text-white py-3 rounded-lg text-sm hover:bg-[#2563eb]/80 transition-colors">
           Enter Command Center

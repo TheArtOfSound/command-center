@@ -5,7 +5,11 @@ import axios, { type AxiosInstance } from 'axios'
 // API key is loaded from localStorage or prompted
 let apiKey = localStorage.getItem('qira_api_key') || ''
 
-const api: AxiosInstance = axios.create({ baseURL: '/api' })
+// Detect if we're on GitHub Pages or localhost
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+const API_BASE = isLocal ? '/api' : (import.meta.env.VITE_API_URL || 'https://qira-cc.onrender.com/api')
+
+const api: AxiosInstance = axios.create({ baseURL: API_BASE })
 api.interceptors.request.use(config => {
   config.headers['X-API-Key'] = apiKey
   return config
