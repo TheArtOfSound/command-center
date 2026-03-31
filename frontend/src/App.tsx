@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore, setApiKey } from './store'
+import NousAgent from './NousAgent'
 
 // ── ICONS (inline SVG to avoid dep issues) ──────────────────
 const Icon = ({ d, className = '' }: { d: string; className?: string }) => (
@@ -41,6 +42,7 @@ const icons = {
 
 const VIEWS = [
   { key: 'nucleus', label: 'NUCLEUS', icon: 'brain' },
+  { key: 'nous', label: 'NOUS AGENT', icon: 'brain' },
   { key: 'intelligence', label: 'INTELLIGENCE', icon: 'zap' },
   { key: 'projects', label: 'PROJECTS', icon: 'folder' },
   { key: 'egc', label: 'EGC RESEARCH', icon: 'flask' },
@@ -1231,6 +1233,7 @@ export default function App() {
   const renderView = () => {
     switch (view) {
       case 'nucleus': return <NucleusView />
+      case 'nous': return <NousAgent />
       case 'intelligence': return <IntelligenceView />
       case 'projects': return <ProjectsView />
       case 'egc': return <EGCView />
