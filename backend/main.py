@@ -22,6 +22,9 @@ from database import init_db, seed_data, get_db, query, execute, uid, now
 from ai_client import chat as ai_chat
 from emails import start_email_system, send_email, preview_email, EMAIL_TYPES
 from github_intel import scan_all_repos, get_all_repos, get_recent_commits, get_repo
+from github_deep import (full_scan as deep_full_scan, get_deep_repos, get_deep_repo,
+                         get_repo_files as deep_get_files, get_file_content as deep_get_file,
+                         search_code as deep_search, build_live_repo_context)
 from health_grid import check_all as health_check_all
 from render_intel import get_render_services, get_render_deploys
 from stripe_intel import get_stripe_overview
@@ -1168,6 +1171,57 @@ async def commit_hook(data: dict):
         except:
             pass
     return {"received": True}
+
+
+# ── GITHUB DEEP SCANNER ──────────────────────────────────────
+class DeepSearchRequest(BaseModel):
+    query: str
+
+
+@app.get("/api/github/deep/repos")
+async def github_deep_repos():
+    return get_deep_repos()
+
+
+@app.get("/api/github/deep/repo/{name:path}")
+async def github_deep_repo(name: str):
+    r = get_deep_repo(name)
+    if not r:
+        raise HTTPException(404, "Repo not found in deep scan DB")
+    return r
+
+
+@app.get("/api/github/deep/files")
+async def github_deep_files(repo: str = Query(...)):
+    return deep_get_files(repo)
+
+
+@app.get("/api/github/deep/file")
+async def github_deep_file(repo: str = Query(...), path: str = Query(...)):
+    f = deep_get_file(repo, path)
+    if not f:
+        raise HTTPException(404, "File not found")
+    return f
+
+
+@app.post("/api/github/deep/search")
+async def github_deep_search(req: DeepSearchRequest):
+    return deep_search(req.query)
+
+
+@app.post("/api/github/deep/scan")
+async def github_deep_scan():
+    """Trigger full deep scan in background thread."""
+    import threading
+    def _run():
+        deep_full_scan()
+    threading.Thread(target=_run, daemon=True).start()
+    return {"status": "deep_scan_started", "message": "Scanning all repos. This may take several minutes."}
+
+
+@app.get("/api/github/deep/context")
+async def github_deep_context():
+    return {"context": build_live_repo_context()}
 
 
 # ── MACHINE / WATCHER ─────────────────────────────────────────
