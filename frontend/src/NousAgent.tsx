@@ -419,7 +419,7 @@ export default function NousAgent() {
     const formattedHistory = msgs.map((m) => `[${m.role.toUpperCase()}]: ${m.content}`).join("\n\n");
 
     const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-    const apiBase = isLocal ? "" : "https://qira-cc.onrender.com";
+    const apiBase = isLocal ? "" : "https://cc.autohustle.online";
     const res = await fetch(apiBase + "/api/intelligence/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-API-Key": apiKey },

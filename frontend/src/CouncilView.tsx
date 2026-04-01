@@ -15,7 +15,7 @@ const AGENT_NAMES = AGENTS.map(a => a.name)
 
 function getApiBase() {
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  return isLocal ? '' : 'https://qira-cc.onrender.com'
+  return isLocal ? '' : 'https://cc.autohustle.online'
 }
 
 function getApiKey() {

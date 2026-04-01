@@ -5,9 +5,9 @@ import axios, { type AxiosInstance } from 'axios'
 // API key is loaded from localStorage or prompted
 let apiKey = localStorage.getItem('qira_api_key') || ''
 
-// API routing: localhost when running locally, Render when on GitHub Pages
+// API routing: localhost when running locally, DigitalOcean droplet when on GitHub Pages
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-const API_BASE = isLocal ? '/api' : 'https://qira-cc.onrender.com/api'
+const API_BASE = isLocal ? '/api' : 'https://cc.autohustle.online/api'
 
 const api: AxiosInstance = axios.create({ baseURL: API_BASE, timeout: 30000 })
 api.interceptors.request.use(config => {
