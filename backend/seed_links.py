@@ -32,7 +32,7 @@ def seed_links():
         ("egc_study", "EGC", "Live Study", "https://theartofsound.github.io/egcstudy/", "web", "http", 0, "Live EGC study for participants", 1),
         ("egc_gate", "EGC", "Research Page (The Gate)", "https://theartofsound.github.io/thegate/", "web", "http", 0, "Public research page with live stats", 1),
         ("egc_rater", "EGC", "Rater Interface", "https://theartofsound.github.io/egcstudy/egcrate/", "web", "http", 0, "Rater validation interface", 1),
-        ("egc_preprint", "EGC", "Preprint (Zenodo)", "https://zenodo.org/records/19242315", "web", "none", 0, "EGC preprint — note: says N=14, current N=40+", 1),
+        ("egc_preprint", "EGC", "Preprint (Zenodo)", "https://zenodo.org/records/19242315", "web", "none", 0, "EGC preprint — note: says N=14, current N=44+", 1),
         ("egc_repo_study", "EGC", "GitHub: egcstudy", "https://github.com/TheArtOfSound/egcstudy", "github", "none", 0, "Study site source code", 1),
         ("egc_repo_gate", "EGC", "GitHub: thegate", "https://github.com/TheArtOfSound/thegate", "github", "none", 0, "Research page source code", 1),
 

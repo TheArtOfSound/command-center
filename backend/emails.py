@@ -52,7 +52,7 @@ Works nights. No institutional backing. Doing this on pure belief and execution.
 Works customer service at Block to pay the bills.
 
 ACTIVE PROJECTS:
-- EGC: Live empirical consciousness study. N=40 primary dataset.
+- EGC: Live empirical consciousness study. N=44+ primary dataset.
   Aronson call (NYU professor, stereotype threat) incoming — highest priority.
   Equation: Psi(t) = Phi * g(K(t)) * T(t) * (1-r(t)) * g(P(t))
   Pearson r=0.311, comfort gap 5.6pts, 6 zero-r suppressors
@@ -119,7 +119,7 @@ Choose one angle:
 - 40 people who gave Bryan their authentic writing
 - Building EGC with no institution, no lab, no team
 - Brandyn and what the collaboration means
-- The comfort gap holding from N=9 to N=40
+- The comfort gap holding from N=9 to N=44+
 - Independent research from Phoenix
 - The P(t) term from standing outside listening to the wind
 - The 60.4% T-drop in real human terms
@@ -202,7 +202,7 @@ Angles:
 - Six zero-r suppressors theoretically
 - P(t) and what cosmic nihilism looks like in data
 - Brandyn's g(K) parabola and why peak at 0.5 matters
-- Comfort gap stability from N=9 to N=40
+- Comfort gap stability from N=9 to N=44+
 
 One insight. 3-4 paragraphs. Make Bryan think new thoughts.""",
     },
@@ -211,7 +211,7 @@ One insight. 3-4 paragraphs. Make Bryan think new thoughts.""",
         "subject_fn": lambda: "Aronson call — preparation brief",
         "prompt": """Final preparation brief before the Aronson call.
 
-All numbers: N=40, type percentages, comfort gap 5.6, r=0.311,
+All numbers: N=44+, type percentages, comfort gap 5.6, r=0.311,
 6 zero-r suppressors, SMNB5TA24 60.4% decline.
 
 Key talking points in order. What NOT to mention.

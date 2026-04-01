@@ -214,7 +214,7 @@ def seed_data():
 
     projects = [
         ("egc", "EGC Research", "active",
-         "Expression-Gated Consciousness - empirical consciousness study, N=40 primary dataset. Core equation: Psi(t) = Phi*g(K(t))*T(t)*(1-r(t))*g(P(t)). g(K)=4K(1-K) is Brandyn Leonard's parabolic conviction function.",
+         "Expression-Gated Consciousness - empirical consciousness study, N=44+ primary dataset. Core equation: Psi(t) = Phi*g(K(t))*T(t)*(1-r(t))*g(P(t)). g(K)=4K(1-K) is Brandyn Leonard's parabolic conviction function.",
          '["python","supabase","postgresql","statistics"]',
          8, '["https://egcstudy.com"]'),
         ("lolm", "LOLM", "active",

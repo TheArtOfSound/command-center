@@ -1464,7 +1464,7 @@ export default function App() {
           <div className="text-[#10b981] text-[10px] font-semibold flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" /> EGC LIVE
           </div>
-          <div className="text-[10px] text-[#64748b] mt-1">N = 40 subjects</div>
+          <div className="text-[10px] text-[#64748b] mt-1">N = 44+ subjects</div>
           <div className="text-[10px] text-[#64748b]">r = 0.311</div>
           <div className="text-[10px] text-[#64748b]">Aronson: PENDING</div>
         </div>

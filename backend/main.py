@@ -140,11 +140,11 @@ BRYAN'S IDENTITY:
 - Philosophy: shoot for the stars, boldness over caution, no excuses
 
 ACTIVE PROJECTS:
-1. EGC — empirical consciousness study, N=40 primary dataset, Aronson call incoming
+1. EGC — empirical consciousness study, N=44+ primary dataset, Aronson call incoming
    Core equation: Psi(t) = Phi * g(K(t)) * T(t) * (1 - r(t)) * g(P(t))
    where g(K) = 4K(1-K) (Brandyn Leonard's parabolic conviction function)
    Emerging extension: g(P) = 4P(1-P) purpose gating term (developed tonight, not yet in main equation)
-   Key stats: N=40, Pearson r=0.311, comfort gap 5.6pts, 6 zero-r suppressors
+   Key stats: N=44+, Pearson r=0.311, comfort gap 5.6pts, 6 zero-r suppressors
    Most extreme suppressor: SMNB5TA24 T_drop=0.466 (60.4% decline)
    Bidirectional K-r feedback mechanism identified by Brandyn Leonard
 2. LOLM — custom LM architecture, TPU pods via TRC grant, targeting 10B-100B params
@@ -413,7 +413,7 @@ async def aronson_prep():
         },
         "talking_points": [
             "EGC predicts three distinct response types to emotional expression — Compressors, Expanders, Suppressors",
-            "Empirical data from N=40 confirms the tripartite distribution",
+            "Empirical data from N=44+ confirms the tripartite distribution",
             "The gating function g(K) = 4K(1-K) models how emotional knowledge gates consciousness — Brandyn Leonard's contribution",
             "Pearson r=0.311 across full dataset shows significant expression-comfort correlation",
             "6 zero-r suppressors suggest a second suppression mechanism — total emotional shutdown, not gradual suppression",
@@ -427,7 +427,7 @@ async def aronson_prep():
             {"q": "How does this relate to existing consciousness theories?", "a": "EGC builds on IIT's Phi measure but adds the expression gate. Traditional theories describe consciousness as purely internal. EGC shows expression itself modulates the conscious experience via g(K)."},
             {"q": "Why these three types specifically?", "a": "They emerge naturally from the gating function. When g(K) is near 1 (high knowledge), expression flows freely (Compressors). When g(K) approaches 0, expression is blocked (Suppressors). Expanders represent intermediate gating."},
             {"q": "How does this connect to stereotype threat?", "a": "Stereotype threat creates a suppression response — people under threat suppress authentic expression. In EGC terms, threat increases r(t) and decreases T(t). Your work shows how identity threat creates Suppressor-type responses."},
-            {"q": "What's the sample size concern?", "a": "N=40 with three distinct populations showing predicted distributions. Effect sizes are strong. Planning to expand to N=100+ with longitudinal tracking."},
+            {"q": "What's the sample size concern?", "a": "N=44+ with three distinct populations showing predicted distributions. Effect sizes are strong. Planning to expand to N=100+ with longitudinal tracking."},
             {"q": "Why should I care about this?", "a": "This is a testable, falsifiable framework for how consciousness gates through expression. It predicts specific measurable outcomes and has confirmed those predictions in live data. It bridges the gap between phenomenology and empiricism."},
             {"q": "What do you need from me?", "a": "Validation of the theoretical framework from someone who understands how cognitive processes mediate self-expression. Potential collaboration on connecting EGC types to stereotype threat responses. Co-authorship if the work warrants it."},
         ],
