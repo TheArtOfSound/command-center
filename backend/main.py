@@ -180,10 +180,37 @@ class ChatRequest(BaseModel):
     project: str = ""
 
 
+try:
+    from chatgpt_context import build_chatgpt_context, search_chatgpt
+except Exception:
+    def build_chatgpt_context(limit=30): return ""
+    def search_chatgpt(query, limit=10): return []
+
+try:
+    from github_deep import build_live_repo_context
+except Exception:
+    def build_live_repo_context(): return ""
+
+# Build enriched context for every Nous/Council call
+def get_enriched_system():
+    ctx = BRYAN_SYSTEM
+    try:
+        repo_ctx = build_live_repo_context()
+        if repo_ctx:
+            ctx += repo_ctx
+    except: pass
+    try:
+        gpt_ctx = build_chatgpt_context(15)
+        if gpt_ctx:
+            ctx += gpt_ctx
+    except: pass
+    return ctx
+
 @app.post("/api/intelligence/chat")
 async def chat_endpoint(req: ChatRequest):
     try:
-        response = ai_chat(BRYAN_SYSTEM, req.message, 4000)
+        system = get_enriched_system()
+        response = ai_chat(system, req.message, 4000)
         return {"response": response, "mode": req.mode}
     except Exception as e:
         return {"response": f"Error: {str(e)}", "mode": req.mode}
