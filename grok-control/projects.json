@@ -1,0 +1,398 @@
+[
+  {
+    "id": "portfolio",
+    "name": "Qira Portfolio Control",
+    "group": "Command",
+    "priority": 0,
+    "status": "active",
+    "workspace_root": true,
+    "repo": null,
+    "traction": "Creation has been completed; curation, consolidation, scaling, proof, and monetization are now the operating priority.",
+    "objective": "Coordinate the active ecosystem, rank real blockers, prevent duplicated work, and direct effort toward revenue, retention, proof, and reliable operations.",
+    "guardrails": [
+      "Do not create another disconnected product unless it directly captures an existing flow or opportunity.",
+      "Treat actual users, revenue, recurring customers, deploy health, and finished proof as stronger signals than conceptual novelty.",
+      "Inspect project repositories individually before making portfolio-level claims."
+    ],
+    "workflows": [
+      "Audit every active project and rank the five blockers with the greatest revenue or reliability impact.",
+      "Identify duplicated infrastructure across projects and propose the smallest consolidation plan.",
+      "Build a seven-day execution queue using only verified repository and business state."
+    ]
+  },
+  {
+    "id": "ah-crap",
+    "name": "Ah Crap Cleanup",
+    "group": "Revenue Now",
+    "priority": 0,
+    "status": "active",
+    "repo": "TheArtOfSound/ahcrapcleanup",
+    "folder_candidates": ["ahcrapcleanup", "ah-crap-cleanup", "AhCrapCleanup"],
+    "path_env": "AH_CRAP_PATH",
+    "traction": "Active Chandler service business with completed jobs, recurring Stripe subscribers, a five-star Google review, worker operations, and live route-management needs.",
+    "objective": "Increase recurring customers while making routing, customer communication, worker execution, payouts, and service verification operationally tight.",
+    "guardrails": [
+      "Approved workers receive 75% of job revenue and Ah Crap Cleanup receives 25%; Bryan receives 100% when he performs the job himself.",
+      "Routes require explicit stop order, realistic automatic times, and workers must follow Bryan's exact order.",
+      "Current service area is Chandler, Arizona unless the business data explicitly says otherwise.",
+      "Do not damage live customer, Stripe, worker, or route data."
+    ],
+    "workflows": [
+      "Audit the live customer-to-route workflow and fix the highest-risk operational gap.",
+      "Review route ordering, timing, worker instructions, and 75/25 payout calculations end to end.",
+      "Find the fastest defensible improvement to recurring customer conversion this week."
+    ]
+  },
+  {
+    "id": "business-systems",
+    "name": "Qira Business Systems",
+    "group": "Revenue Now",
+    "priority": 0,
+    "status": "active",
+    "repo": "TheArtOfSound/qira-website",
+    "folder_candidates": ["qira-website", "smallbusinessfix", "offer-architect", "business-systems"],
+    "path_env": "QIRA_CONSULTING_PATH",
+    "traction": "First $500 client engagement completed; current proof stack includes Ah Crap Cleanup, WeSearch traffic, Qira products, and finished client assets rather than strategy-only deliverables.",
+    "objective": "Turn hands-on business systems work into a clear, repeatable offer with stronger proof, lead intake, delivery workflow, case studies, and conversion.",
+    "guardrails": [
+      "The offer must end in concrete finished assets, not a vague strategy deck.",
+      "Use verified proof and exact claims; do not inflate traffic, client outcomes, credentials, or revenue.",
+      "Preserve the Mini Audit / Starter Sprint / larger scoped engagement ladder unless evidence supports changing it."
+    ],
+    "workflows": [
+      "Audit the consulting funnel from first impression through payment, intake, delivery, and case-study capture.",
+      "Turn the first client engagement into a defensible proof asset without exposing private client information.",
+      "Find and implement the highest-leverage conversion improvement on the offer site."
+    ]
+  },
+  {
+    "id": "wesearch",
+    "name": "WeSearch Press",
+    "group": "Revenue Now",
+    "priority": 0,
+    "status": "active",
+    "repo": null,
+    "folder_candidates": ["wesearch", "wesearch-press", "WeSearch", "newsaggregator"],
+    "path_env": "WESEARCH_PATH",
+    "traction": "Large real traffic and story volume with meaningful signup activity; it is one of Bryan's strongest operating proof assets.",
+    "objective": "Convert traffic into durable user value, retention, distribution leverage, and a credible monetization path without degrading editorial utility.",
+    "guardrails": [
+      "Separate human traffic from bot/request volume when reporting traction.",
+      "Do not weaken source transparency, attribution, or the product's utility for short-term monetization.",
+      "Verify current production behavior and analytics before proposing major rewrites."
+    ],
+    "workflows": [
+      "Audit acquisition, activation, retention, and monetization using the actual code and available analytics instrumentation.",
+      "Find the strongest conversion opportunity between high traffic and current signup behavior.",
+      "Review production reliability, content freshness, source quality, and failure handling."
+    ]
+  },
+  {
+    "id": "qira-hq",
+    "name": "Qira HQ",
+    "group": "Qira Core",
+    "priority": 1,
+    "status": "active",
+    "repo": "TheArtOfSound/qira-hq",
+    "folder_candidates": ["qira-hq", "Qira-HQ"],
+    "path_env": "QIRA_HQ_PATH",
+    "traction": "Qira is the umbrella organization connecting active research, software, local business, consulting, and proof assets.",
+    "objective": "Make the portfolio legible, connected, credible, and operationally useful rather than presenting a scattered list of experiments.",
+    "guardrails": [
+      "Lead with demonstrated utility and proof instead of broad claims about the ecosystem.",
+      "Keep active priorities visibly distinct from archived, experimental, or secondary work.",
+      "Avoid duplicating product pages and infrastructure that already exist elsewhere."
+    ],
+    "workflows": [
+      "Audit Qira's public information architecture and remove ambiguity about what is active and commercially relevant.",
+      "Build a proof-first portfolio map linking products, users, revenue, research, and operational evidence.",
+      "Identify stale claims, broken links, and projects that should be de-emphasized."
+    ]
+  },
+  {
+    "id": "qev-desktop",
+    "name": "QEV Desktop / Secure",
+    "group": "Qira Products",
+    "priority": 1,
+    "status": "active",
+    "repo": "TheArtOfSound/qev-desktop",
+    "folder_candidates": ["qev-desktop", "QEV-Desktop"],
+    "path_env": "QEV_DESKTOP_PATH",
+    "traction": "Working public desktop demonstration and broader QEV Secure product framing around verifiable encrypted digital objects.",
+    "objective": "Make the demo technically credible, understandable, testable, and suitable as a foundation for real QEV product use.",
+    "guardrails": [
+      "Do not claim cryptographic guarantees that are not implemented and verified.",
+      "Keep threat model, key handling, lifecycle, and verification semantics explicit.",
+      "Protect compatibility with existing public demos and data formats."
+    ],
+    "workflows": [
+      "Audit the QEV lifecycle implementation against its documented cryptographic claims.",
+      "Run the application and fix the most important usability or verification failure.",
+      "Produce a precise gap list between demo behavior and production-grade security."
+    ]
+  },
+  {
+    "id": "my-digital",
+    "name": "My Digital",
+    "group": "Qira Products",
+    "priority": 1,
+    "status": "active",
+    "repo": "TheArtOfSound/my-digital",
+    "folder_candidates": ["my-digital", "mydigital"],
+    "path_env": "MY_DIGITAL_PATH",
+    "traction": "QEV-backed marketplace concept with create, lock, list, buy, license, unlock, verify, trace, creator funding, and Stripe positioning.",
+    "objective": "Turn the QEV lifecycle into a coherent user product with trustworthy ownership, licensing, payments, unlocking, and verification flows.",
+    "guardrails": [
+      "Do not imply legal ownership or licensing guarantees beyond the implemented contract and product behavior.",
+      "Keep payment state and cryptographic state consistent and recoverable.",
+      "Prioritize one complete trustworthy transaction flow over many unfinished marketplace features."
+    ],
+    "workflows": [
+      "Trace one complete seller-to-buyer transaction and identify every unimplemented or unsafe transition.",
+      "Audit payment, license, unlock, and verification state consistency.",
+      "Choose and implement the smallest end-to-end flow that proves the product."
+    ]
+  },
+  {
+    "id": "lolm",
+    "name": "LOLM",
+    "group": "Research",
+    "priority": 1,
+    "status": "active",
+    "repo": "TheArtOfSound/lolm",
+    "folder_candidates": ["lolm", "LOLM"],
+    "path_env": "LOLM_PATH",
+    "traction": "Custom hybrid Transformer-SSM architecture with training runs, tracked perplexity/loss, and Google TPU Research Cloud access.",
+    "objective": "Improve scientific credibility through reproducible training, strong baselines, ablations, evaluation discipline, and clear architecture documentation.",
+    "guardrails": [
+      "Do not treat promising training curves as proof of architectural superiority.",
+      "Preserve reproducibility, seed control, dataset accounting, baseline parity, and honest uncertainty.",
+      "Use 'free Cloud TPU quota' wording rather than implying unrestricted Google sponsorship."
+    ],
+    "workflows": [
+      "Audit the current training and evaluation pipeline for reproducibility and baseline fairness.",
+      "Design the next highest-information ablation instead of simply scaling the run.",
+      "Verify reported metrics against logs and produce a publication-grade experiment summary."
+    ]
+  },
+  {
+    "id": "nfet",
+    "name": "NFET / PTI",
+    "group": "Research",
+    "priority": 1,
+    "status": "active",
+    "repo": "TheArtOfSound/nfet-primitive",
+    "folder_candidates": ["nfet-primitive", "NFET", "pti", "phoenix-traffic-intelligence"],
+    "path_env": "NFET_PATH",
+    "traction": "Traffic optimization and Phoenix traffic intelligence work using oscillators, Monte Carlo methods, BPR-style traffic modeling, closures, and live corridor monitoring.",
+    "objective": "Separate the NFET research claim from the PTI operational product, validate both rigorously, and improve real-world usefulness.",
+    "guardrails": [
+      "Do not infer causal traffic improvement from simulation alone.",
+      "Keep datasets, assumptions, calibration, baselines, and validation cities explicit.",
+      "Do not merge research metrics with live operational risk scores without clear labeling."
+    ],
+    "workflows": [
+      "Audit simulation assumptions, baselines, and validation methodology for the strongest unsupported claim.",
+      "Review PTI data freshness and reliability across Phoenix corridors.",
+      "Design a falsifiable next validation that would materially strengthen or weaken NFET."
+    ]
+  },
+  {
+    "id": "constructed-subject",
+    "name": "Constructed Subject Argument",
+    "group": "Research",
+    "priority": 1,
+    "status": "active",
+    "repo": "TheArtOfSound/The-Constructed-Subject-Argument",
+    "folder_candidates": ["The-Constructed-Subject-Argument", "constructed-subject"],
+    "path_env": "CONSTRUCTED_SUBJECT_PATH",
+    "traction": "Public interactive book project with a synthetic-person thought experiment, claim and originality ledgers, and a focus on origin objections, episodic subjecthood, representation, valence, and suffering.",
+    "objective": "Develop the strongest defensible version of the argument while clearly separating original contributions, inherited ideas, implications, and unresolved gaps.",
+    "guardrails": [
+      "Only include claims that survive serious adversarial review.",
+      "Never manufacture novelty, citations, consensus, or certainty.",
+      "Keep the valence and subjectivity problem visible rather than arguing past it."
+    ],
+    "workflows": [
+      "Adversarially review the weakest current claim and either repair, qualify, or remove it.",
+      "Trace every major claim to its evidence, source, originality status, and uncertainty.",
+      "Improve the interactive book without sacrificing philosophical precision."
+    ]
+  },
+  {
+    "id": "autohustle",
+    "name": "AutoHustle",
+    "group": "Products",
+    "priority": 1,
+    "status": "active",
+    "repo": "TheArtOfSound/autohustle",
+    "folder_candidates": ["autohustle", "AutoHustle", "PUMPVOLUMEBOT"],
+    "path_env": "AUTOHUSTLE_PATH",
+    "traction": "A Solana-related product produced meaningful paid usage and is part of the current proof stack.",
+    "objective": "Preserve legitimate customer value, improve reliability and analytics, and reduce operational, compliance, and reputation risk.",
+    "guardrails": [
+      "Do not add deceptive market-manipulation behavior, evasion, fake guarantees, or unsafe wallet handling.",
+      "Treat private keys, seed phrases, transaction signing, and customer funds as high-risk surfaces.",
+      "Prefer transparent analytics and legitimate tooling over artificial activity."
+    ],
+    "workflows": [
+      "Audit wallet, key, transaction, payment, and failure-handling security.",
+      "Find the strongest legitimate product direction supported by existing infrastructure and users.",
+      "Review current customer-facing claims for accuracy and risk."
+    ]
+  },
+  {
+    "id": "flows",
+    "name": "Flows",
+    "group": "Qira Products",
+    "priority": 2,
+    "status": "maintain",
+    "repo": null,
+    "folder_candidates": ["flows", "flows-ai", "emergent-flows"],
+    "path_env": "FLOWS_PATH",
+    "traction": "Guided prompt walkthrough library with seeded flows and generated community flows.",
+    "objective": "Use the existing product as a lead and workflow asset rather than expanding it without demand evidence.",
+    "guardrails": [
+      "Do not add broad feature surface before validating repeat use.",
+      "Keep generated flow JSON valid, recoverable, and understandable.",
+      "Connect improvements to Qira consulting or another verified acquisition flow."
+    ],
+    "workflows": [
+      "Audit onboarding, completion, repeat use, and the path into Qira services.",
+      "Fix the highest-friction flow-authoring or execution issue.",
+      "Identify what should be maintained, removed, or converted into consulting lead generation."
+    ]
+  },
+  {
+    "id": "deslop",
+    "name": "DeSlop",
+    "group": "Qira Products",
+    "priority": 2,
+    "status": "maintain",
+    "repo": "TheArtOfSound/DeSlop",
+    "folder_candidates": ["DeSlop", "deslop"],
+    "path_env": "DESLOP_PATH",
+    "traction": "Working static repository scanner with meaningful scoring iterations.",
+    "objective": "Make repository findings accurate, explainable, and useful as a proof or lead-generation layer for Qira business systems work.",
+    "guardrails": [
+      "Do not present heuristic scores as objective code quality truth.",
+      "Explain why each finding matters and how confidence is determined.",
+      "Avoid noisy issue inflation that weakens trust."
+    ],
+    "workflows": [
+      "Validate scoring against a set of known-good and known-bad repositories.",
+      "Reduce false positives and improve explanation quality.",
+      "Connect scan output to a concrete Qira service conversion path."
+    ]
+  },
+  {
+    "id": "codey",
+    "name": "Codey",
+    "group": "Qira Products",
+    "priority": 2,
+    "status": "maintain",
+    "repo": "TheArtOfSound/codey",
+    "folder_candidates": ["codey", "Codey"],
+    "path_env": "CODEY_PATH",
+    "traction": "AI builder with repository connection and code change ambitions.",
+    "objective": "Clarify the product's real differentiation and keep only the repo workflows that are reliable enough to trust.",
+    "guardrails": [
+      "Never claim a code change, push, or deployment occurred without verification.",
+      "Require explicit repository scope and safe branch behavior.",
+      "Do not compete as a generic builder without a concrete wedge."
+    ],
+    "workflows": [
+      "Audit repository connection, branch safety, patch generation, and verification.",
+      "Identify the narrowest product wedge supported by current implementation.",
+      "Remove misleading or unimplemented capability claims."
+    ]
+  },
+  {
+    "id": "goodgame",
+    "name": "GoodGame",
+    "group": "Products",
+    "priority": 2,
+    "status": "maintain",
+    "repo": "TheArtOfSound/GoodGame",
+    "folder_candidates": ["GoodGame", "goodgame"],
+    "path_env": "GOODGAME_PATH",
+    "traction": "Crypto gaming project with an existing token and holder base.",
+    "objective": "Focus on a legitimate free-to-play game loop, retention, and transparent token utility rather than speculative framing.",
+    "guardrails": [
+      "Do not make price, return, or investment promises.",
+      "Keep gameplay value independent from token speculation.",
+      "Protect wallet and transaction safety."
+    ],
+    "workflows": [
+      "Audit the actual playable loop and identify the largest retention failure.",
+      "Review token utility claims against implementation.",
+      "Prioritize one measurable gameplay improvement."
+    ]
+  },
+  {
+    "id": "tokens",
+    "name": "TOKENS Ledger",
+    "group": "Infrastructure",
+    "priority": 2,
+    "status": "maintain",
+    "repo": "TheArtOfSound/TOKENS",
+    "folder_candidates": ["TOKENS", "tokens"],
+    "path_env": "TOKENS_PATH",
+    "traction": "Large historical agent-usage ledger tracking fresh, cached, daily, and estimated cost metrics.",
+    "objective": "Keep usage and cost accounting accurate, auditable, and useful for operating decisions across the portfolio.",
+    "guardrails": [
+      "Distinguish estimated cost from billed cost.",
+      "Preserve raw source data and calculation reproducibility.",
+      "Do not expose credentials or private transcripts in public outputs."
+    ],
+    "workflows": [
+      "Audit cost calculations and cached-token treatment against raw records.",
+      "Find missing providers, duplicated records, or date-boundary errors.",
+      "Produce a portfolio usage summary tied to operating decisions."
+    ]
+  },
+  {
+    "id": "black-imago",
+    "name": "Black Imago",
+    "group": "Products",
+    "priority": 2,
+    "status": "maintain",
+    "repo": null,
+    "folder_candidates": ["black-imago", "BlackImago", "blackimago"],
+    "path_env": "BLACK_IMAGO_PATH",
+    "traction": "Dozens of users with multiple contributors and repeat posting behavior.",
+    "objective": "Preserve the real community signal, improve contribution and return loops, and avoid unnecessary platform expansion.",
+    "guardrails": [
+      "Protect contributor identity and content controls.",
+      "Measure repeat contribution and readership separately from account count.",
+      "Do not add social features without evidence they improve the core archive."
+    ],
+    "workflows": [
+      "Audit the contributor funnel from discovery through first and repeat post.",
+      "Fix the highest-friction reading or submission issue.",
+      "Identify the strongest retention signal available in the current data model."
+    ]
+  },
+  {
+    "id": "visualizer",
+    "name": "Galaxy Visualizer",
+    "group": "Products",
+    "priority": 2,
+    "status": "maintain",
+    "repo": null,
+    "folder_candidates": ["galaxy-visualizer", "visualizer", "bloob-studio"],
+    "path_env": "VISUALIZER_PATH",
+    "traction": "Public users and direct feature requests; vertical, square, landscape, recording, and control-cleanup work has already been completed.",
+    "objective": "Improve reliability, export quality, usability, and paid-pack potential based on actual user behavior.",
+    "guardrails": [
+      "Every visible control must affect output.",
+      "Preview and recording dimensions must remain consistent.",
+      "Do not reintroduce dead controls or clutter already removed."
+    ],
+    "workflows": [
+      "Audit every control against runtime behavior and recording output.",
+      "Test landscape, square, and exact 9:16 export paths.",
+      "Find the smallest improvement most likely to increase repeat use or paid conversion."
+    ]
+  }
+]

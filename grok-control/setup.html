@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Connect Qira Workspace</title>
+  <style>
+    :root{color-scheme:dark;--bg:#07090d;--panel:#0d131c;--line:#263246;--text:#edf4fb;--muted:#8998ad;--a:#65dcff;--good:#52dc8b;--bad:#ff7887}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 75% 0,rgba(69,77,220,.18),transparent 35%),var(--bg);color:var(--text);font:14px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:grid;place-items:center;padding:24px}
+    .shell{width:min(820px,100%)}.ey{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:800}.card{margin-top:14px;background:rgba(13,19,28,.95);border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 24px 90px rgba(0,0,0,.4)}h1{font-size:29px;margin:8px 0 10px}h1 span{color:var(--a)}p{color:#b0bdcc;line-height:1.65}.notice{border:1px solid #5d3a44;background:#23141a;color:#ffb0ba;padding:12px 14px;border-radius:10px;margin:18px 0}.row{display:grid;grid-template-columns:1fr auto;gap:9px}input{width:100%;background:#070b11;border:1px solid var(--line);border-radius:10px;padding:13px;color:var(--text);outline:0}input:focus{border-color:#3d708e}.btn{border:1px solid var(--line);background:#111a26;color:var(--text);padding:12px 15px;border-radius:10px;cursor:pointer;font-weight:750}.btn.primary{background:linear-gradient(135deg,#205d7d,#464c9d);border-color:#4b7899}.btn:hover{border-color:#57708e}.candidates{display:grid;gap:8px;margin-top:18px}.candidate{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;background:#090e15;border:1px solid var(--line);border-radius:11px;padding:11px 12px}.path{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}.meta{color:var(--muted);font-size:11px;margin-top:4px}.good{color:var(--good)}.bad{color:var(--bad)}.help{margin-top:20px;border-top:1px solid var(--line);padding-top:18px}.code{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;background:#070b11;border:1px solid var(--line);border-radius:9px;padding:11px;overflow-wrap:anywhere}.error{display:none;color:#ff9ca8;margin-top:10px}.error.show{display:block}
+    @media(max-width:620px){.row{grid-template-columns:1fr}.candidate{grid-template-columns:1fr}.candidate .btn{width:100%}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="ey">Bryan Leonard · Qira Grok Ops</div>
+    <section class="card">
+      <h1>Connect your <span>repository workspace</span></h1>
+      <p>Grok is installed and the control board is running. It only needs the folder that contains your project repositories. Nothing is uploaded; this path stays on your Mac.</p>
+      <div class="notice">The previous default, <strong>~/Documents/GitHub</strong>, does not match where this checkout is actually running.</div>
+      <label class="ey" for="root">Workspace folder</label>
+      <div class="row" style="margin-top:8px">
+        <input id="root" placeholder="/Users/bryan/path/containing/your/repos">
+        <button id="save" class="btn primary">Save and continue</button>
+      </div>
+      <div id="error" class="error"></div>
+      <div class="help">
+        <div class="ey">Detected candidates</div>
+        <div id="candidates" class="candidates"></div>
+      </div>
+      <div class="help">
+        <div class="ey">Find the correct path</div>
+        <p>Open Terminal inside the folder containing Ah Crap Cleanup, WeSearch, Qira, and your other repositories, then run:</p>
+        <div class="code">pwd</div>
+        <p>Paste the returned absolute path above. The folder may contain the repositories directly or one level deeper.</p>
+      </div>
+    </section>
+  </main>
+<script>
+const $=id=>document.getElementById(id);
+async function api(path,opt={}){const r=await fetch(path,{headers:{'Content-Type':'application/json'},...opt});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.detail||`Request failed ${r.status}`);return d}
+function showError(message){$('error').textContent=message;$('error').classList.add('show')}
+async function load(){
+  const config=await api('/api/config');
+  $('root').value=config.workspace_root||'';
+  const box=$('candidates');box.replaceChildren();
+  const candidates=[...(config.candidates||[])].sort((a,b)=>(b.project_matches-a.project_matches)||Number(b.exists)-Number(a.exists));
+  for(const item of candidates){
+    const row=document.createElement('div');row.className='candidate';
+    const info=document.createElement('div');
+    const path=document.createElement('div');path.className='path';path.textContent=item.path;
+    const meta=document.createElement('div');meta.className=`meta ${item.project_matches?'good':item.exists?'':'bad'}`;meta.textContent=item.exists?`${item.project_matches} recognized project folder${item.project_matches===1?'':'s'} found`:'Folder does not exist';
+    info.append(path,meta);
+    const button=document.createElement('button');button.className='btn';button.textContent='Use this folder';button.disabled=!item.exists;button.onclick=()=>{$('root').value=item.path;save()};
+    row.append(info,button);box.append(row);
+  }
+}
+async function save(){
+  $('error').classList.remove('show');
+  const root=$('root').value.trim();
+  if(!root){showError('Enter a folder path.');return}
+  $('save').disabled=true;$('save').textContent='Checking…';
+  try{await api('/api/config',{method:'POST',body:JSON.stringify({workspace_root:root})});location.href='/'}
+  catch(e){showError(e.message);$('save').disabled=false;$('save').textContent='Save and continue'}
+}
+$('save').onclick=save;$('root').onkeydown=e=>{if(e.key==='Enter')save()};load().catch(e=>showError(e.message));
+</script>
+</body>
+</html>
