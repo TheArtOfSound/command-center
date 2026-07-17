@@ -27,13 +27,13 @@ jobs:
         with:
           node-version: "22"
       - run: python -m pip install -r requirements.txt
-      - run: python -m py_compile server.py workspace_server.py
+      - run: python -m py_compile server.py workspace_server.py managed_server.py
       - run: python -m json.tool projects.json > /dev/null
       - name: Validate embedded browser JavaScript
         run: |
           node - <<'NODE'
           const fs = require('fs');
-          for (const filename of ['index.html', 'setup.html']) {
+          for (const filename of ['index.html', 'setup.html', 'managed_index.html']) {
             const html = fs.readFileSync(filename, 'utf8');
             const match = html.match(/<script>([\s\S]*)<\/script>/);
             if (!match) throw new Error(`No script block found in ${filename}`);
@@ -44,11 +44,14 @@ jobs:
       - name: Import FastAPI app and project registry
         run: |
           python - <<'PY'
-          import workspace_server
-          projects = workspace_server.core.defs()
-          assert workspace_server.app.title == 'Qira Grok Ops'
+          import managed_server
+          projects = managed_server.workspace.core.defs()
+          assert managed_server.app.title == 'Qira Grok Ops'
           assert len(projects) >= 18
           assert projects[1]['id'] == 'ah-crap'
-          assert workspace_server.config_payload()['workspace_root']
-          print(f'Validated {len(projects)} project definitions')
+          assert managed_server.MANAGED_ROOT.is_dir()
+          assert managed_server.active_workspace_root().is_dir()
+          ah_crap = managed_server.project_by_id('ah-crap')
+          assert ah_crap['repo'] == 'TheArtOfSound/ahcrapcleanup'
+          print(f'Validated {len(projects)} project definitions and managed workspace')
           PY
