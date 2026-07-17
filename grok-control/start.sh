@@ -18,11 +18,12 @@ source .venv/bin/activate
 python -m pip install --quiet --upgrade pip
 python -m pip install --quiet -r requirements.txt
 
-export QIRA_WORKSPACE_ROOT="${QIRA_WORKSPACE_ROOT:-$HOME/Documents/GitHub}"
+# QIRA_WORKSPACE_ROOT is now optional. The app auto-detects likely repository
+# roots and presents a first-run setup screen when none of them match.
 export GROK_CONTROL_HOST="${GROK_CONTROL_HOST:-127.0.0.1}"
 export GROK_CONTROL_PORT="${GROK_CONTROL_PORT:-8787}"
 
-python -m uvicorn server:app --host "$GROK_CONTROL_HOST" --port "$GROK_CONTROL_PORT" &
+python -m uvicorn workspace_server:app --host "$GROK_CONTROL_HOST" --port "$GROK_CONTROL_PORT" &
 SERVER_PID=$!
 trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT INT TERM
 
